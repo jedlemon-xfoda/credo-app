@@ -66,6 +66,7 @@ export type MassTextBlock = {
   id: string;
   role: MassTextRole;
   text: string;
+  contentKey?: string;
   source?: MassSourceMetadata;
 };
 

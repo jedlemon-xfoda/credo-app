@@ -1,0 +1,42 @@
+{
+  "brand": {
+    "appName": "CREDO",
+    "tagline": "Understand the Mass. Live the Faith.",
+    "categoryLine": "The quiet companion for Sunday Mass.",
+    "rhythm": ["Prepare", "Attend", "Receive", "Live"]
+  },
+  "colors": {
+    "background": "#FBF7EF",
+    "surface": "#FFFDF8",
+    "surfaceWarm": "#F6EDE2",
+    "burgundy": "#8B1E2D",
+    "burgundyDark": "#681421",
+    "navyBlack": "#07090D",
+    "charcoal": "#211C18",
+    "mutedText": "#746B60",
+    "gold": "#B9903D",
+    "goldMuted": "#C9A86A",
+    "border": "#E2D6C8",
+    "stone": "#D9CEC0"
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32
+  },
+  "radius": {
+    "sm": 8,
+    "md": 12,
+    "lg": 18,
+    "xl": 24
+  },
+  "typography": {
+    "display": "Georgia",
+    "body": "System",
+    "bodyMinSize": 16,
+    "lineHeightMultiplier": 1.45
+  }
+}

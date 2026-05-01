@@ -1,0 +1,1 @@
+export { sundayContent } from "./sunday";

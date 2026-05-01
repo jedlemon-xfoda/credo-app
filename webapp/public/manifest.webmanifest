@@ -1,0 +1,17 @@
+{
+  "name": "The Ordinary Catholic",
+  "short_name": "Ordinary Catholic",
+  "description": "Catholic learning, prayer, cited answers, and prayer-first community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffdf8",
+  "theme_color": "#fffdf8",
+  "icons": [
+    {
+      "src": "/ordinary-catholic-logo.jpg",
+      "sizes": "400x400",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

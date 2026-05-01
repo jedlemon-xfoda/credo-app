@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Ordinary Catholic App Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="brand-panel">
+        <nav class="topbar" aria-label="Primary">
+          <div class="brand-mark">
+            <img src="./public/ordinary-catholic-logo.jpg" alt="The Ordinary Catholic seal" />
+            <span>The Ordinary Catholic</span>
+          </div>
+          <div class="nav-links">
+            <a href="#prototype">Prototype</a>
+            <a href="#library">Library</a>
+            <a href="#ask">Ask</a>
+            <a href="#pray">Pray</a>
+            <a href="#community">Community</a>
+          </div>
+        </nav>
+
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Catholic teaching, prayer, and community</p>
+            <h1>Ancient faith for ordinary days.</h1>
+            <p>
+              A source-grounded Catholic companion for learning the faith, praying with the
+              Church, and walking with other Catholics.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#prototype">Open prototype</a>
+              <a class="button secondary" href="#pray">Pray the Rosary</a>
+            </div>
+          </div>
+
+          <div class="phone-frame home-screen" aria-label="Mobile app home mockup">
+            <header class="phone-header">
+              <img src="./public/ordinary-catholic-logo.jpg" alt="" />
+              <div>
+                <span>Today</span>
+                <strong>Monday of Eastertide</strong>
+              </div>
+            </header>
+            <div class="daily-card">
+              <span>Feast & Focus</span>
+              <h2>St. Catherine of Siena</h2>
+              <p>Doctor of the Church, reformer, and witness to courageous charity.</p>
+            </div>
+            <div class="quick-grid">
+              <button>Rosary</button>
+              <button>Readings</button>
+              <button>Catechism</button>
+              <button>Intentions</button>
+            </div>
+            <div class="source-strip">
+              <span>Trusted Sources</span>
+              <div>Vatican.va</div>
+              <div>New Advent</div>
+              <div>Catechism</div>
+            </div>
+            <div class="phone-nav" aria-label="App navigation preview">
+              <a href="#prototype">Today</a>
+              <a href="#ask">Ask</a>
+              <a href="#pray">Pray</a>
+              <a href="#community">Community</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="prototype-section" id="prototype">
+        <div class="section-heading">
+          <p class="eyebrow">Clickable MVP</p>
+          <h2>Five-screen app prototype</h2>
+          <p>
+            A tighter first release: daily formation, cited answers, curated library paths,
+            traditional prayer flows, and moderated community.
+          </p>
+        </div>
+
+        <div class="app-prototype" aria-label="Clickable app prototype">
+          <aside class="app-sidebar">
+            <div class="app-logo">
+              <img src="./public/ordinary-catholic-logo.jpg" alt="" />
+              <div>
+                <span>The Ordinary</span>
+                <strong>Catholic</strong>
+              </div>
+            </div>
+            <button class="tab-button" data-screen="onboarding-screen">Start</button>
+            <button class="tab-button active" data-screen="today">Today</button>
+            <button class="tab-button" data-screen="ask-screen">Ask</button>
+            <button class="tab-button" data-screen="answer-screen">Sources</button>
+            <button class="tab-button" data-screen="library-screen">Library</button>
+            <button class="tab-button" data-screen="topic-screen">Topic</button>
+            <button class="tab-button" data-screen="pray-screen">Pray</button>
+            <button class="tab-button" data-screen="rosary-screen">Rosary</button>
+            <button class="tab-button" data-screen="community-screen">Community</button>
+            <button class="tab-button" data-screen="intention-screen">Post</button>
+          </aside>
+
+          <div class="app-canvas">
+            <section class="app-screen" id="onboarding-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Onboarding</p>
+                  <h3>Begin with a Catholic rhythm.</h3>
+                </div>
+                <span class="trust-badge">Personalized</span>
+              </div>
+              <div class="onboarding-grid">
+                <article class="onboard-card active">
+                  <span>Learn</span>
+                  <h4>Understand the faith</h4>
+                  <p>Build a path through Catechism, Scripture, councils, and tradition.</p>
+                </article>
+                <article class="onboard-card">
+                  <span>Pray</span>
+                  <h4>Practice daily prayer</h4>
+                  <p>Rosary, Divine Mercy, novenas, Latin prayers, and prayer reminders.</p>
+                </article>
+                <article class="onboard-card">
+                  <span>Ask</span>
+                  <h4>Search with sources</h4>
+                  <p>Answers are grounded in approved Catholic documents and clearly cited.</p>
+                </article>
+                <article class="onboard-card">
+                  <span>Participate</span>
+                  <h4>Pray with others</h4>
+                  <p>Join prayer intentions, parish circles, and moderated study groups.</p>
+                </article>
+              </div>
+              <div class="setup-panel">
+                <strong>First setup question</strong>
+                <p>What do you want The Ordinary Catholic to help you do first?</p>
+                <div class="source-list">
+                  <button>Learn doctrine</button>
+                  <button>Build prayer habit</button>
+                  <button>Find answers</button>
+                  <button>Join intentions</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-screen active" id="today">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Today</p>
+                  <h3>Tuesday in Easter Week</h3>
+                </div>
+                <span class="trust-badge">Source-grounded</span>
+              </div>
+              <div class="today-grid">
+                <article class="feature-panel saint-panel">
+                  <span>Saint & Feast</span>
+                  <h4>St. Catherine of Siena</h4>
+                  <p>Doctor of the Church and witness to reform, prayer, and courageous charity.</p>
+                </article>
+                <article class="feature-panel">
+                  <span>Daily Teaching</span>
+                  <h4>The Eucharist is the source and summit.</h4>
+                  <p>Linked path: Catechism, Vatican II, Trent, Aquinas, and devotional practice.</p>
+                </article>
+                <article class="feature-panel">
+                  <span>Prayer</span>
+                  <h4>Regina Caeli</h4>
+                  <p>Seasonal Marian prayer with English and Latin options.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="app-screen" id="ask-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Ask</p>
+                  <h3>Search Catholic teaching</h3>
+                </div>
+                <span class="trust-badge">Citations required</span>
+              </div>
+              <div class="ask-vertical-slice">
+                <form class="ask-form" id="ask-form">
+                  <label for="question-input">Ask from trusted Catholic sources</label>
+                  <div class="ask-control">
+                    <input
+                      id="question-input"
+                      type="text"
+                      value="Why do Catholics confess sins to a priest?"
+                    />
+                    <button type="submit">Search</button>
+                  </div>
+                </form>
+                <div class="suggested-questions" aria-label="Suggested questions">
+                  <button data-question="Why do Catholics confess sins to a priest?">Confession</button>
+                  <button data-question="What does the Church teach about purgatory?">Purgatory</button>
+                  <button data-question="What is the Eucharist?">Eucharist</button>
+                </div>
+                <article class="source-answer">
+                  <span id="ask-source-type">Official teaching</span>
+                  <h4 id="ask-answer-title">
+                    Confession is rooted in Christ giving the apostles authority to forgive sins.
+                  </h4>
+                  <p id="ask-answer-body">
+                    The sacrament includes contrition, confession, absolution, and satisfaction.
+                    The app shows the answer beside original sources instead of hiding them.
+                  </p>
+                  <div class="source-list" id="ask-citations"></div>
+                  <div class="answer-actions">
+                    <button type="button" id="open-sources">Open source drawer</button>
+                    <button type="button" id="save-answer">Save topic</button>
+                  </div>
+                </article>
+                <div class="saved-note" id="saved-note" role="status">Saved to your library.</div>
+              </div>
+            </section>
+
+            <section class="app-screen" id="answer-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Answer Detail</p>
+                  <h3>Every answer shows its receipts.</h3>
+                </div>
+                <span class="trust-badge">Source hierarchy</span>
+              </div>
+              <div class="answer-layout">
+                <article class="source-answer answer-main">
+                  <span>Question</span>
+                  <h4 id="detail-question">Why do Catholics confess sins to a priest?</h4>
+                  <p id="detail-answer">
+                    Catholics confess to a priest because Christ entrusted the ministry of
+                    reconciliation to the apostles and their successors. The priest acts as a
+                    minister of Christ and the Church, not as a private spiritual adviser.
+                  </p>
+                  <div class="doctrine-scale">
+                    <div><strong>Tier 1</strong><span>Scripture and Catechism</span></div>
+                    <div><strong>Tier 2</strong><span>Magisterial teaching</span></div>
+                    <div><strong>Tier 3</strong><span>Saints and commentary</span></div>
+                  </div>
+                </article>
+                <aside class="citation-drawer" id="detail-citations">
+                </aside>
+              </div>
+            </section>
+
+            <section class="app-screen" id="library-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Library</p>
+                  <h3>Curated Catholic sources</h3>
+                </div>
+                <span class="trust-badge">Tiered sources</span>
+              </div>
+              <div class="topic-grid">
+                <article>
+                  <span>Topic Path</span>
+                  <h4>Mary and the Saints</h4>
+                  <p>Scripture, Catechism, councils, fathers, and common objections.</p>
+                </article>
+                <article>
+                  <span>Document Shelf</span>
+                  <h4>Vatican Documents</h4>
+                  <p>Encyclicals, apostolic letters, councils, and papal teachings.</p>
+                </article>
+                <article>
+                  <span>Classics</span>
+                  <h4>Fathers and Aquinas</h4>
+                  <p>Patristic texts, Summa references, and historical notes.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="app-screen" id="topic-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Topic Detail</p>
+                  <h3>The Eucharist</h3>
+                </div>
+                <span class="trust-badge">Study path</span>
+              </div>
+              <div class="topic-detail">
+                <article class="topic-hero-card">
+                  <span>Core Teaching</span>
+                  <h4>Source and summit of the Christian life</h4>
+                  <p>
+                    A guided topic page would combine doctrine, Scripture, Church documents,
+                    saints, common questions, and devotional practice.
+                  </p>
+                  <div class="source-list">
+                    <button>Save topic</button>
+                    <button>Ask follow-up</button>
+                    <button>Start study</button>
+                  </div>
+                </article>
+                <div class="topic-source-stack">
+                  <article>
+                    <span>1</span>
+                    <strong>Catechism</strong>
+                    <p>CCC 1322-1419: the sacrament of the Eucharist.</p>
+                  </article>
+                  <article>
+                    <span>2</span>
+                    <strong>Scripture</strong>
+                    <p>John 6, Luke 22, 1 Corinthians 10-11.</p>
+                  </article>
+                  <article>
+                    <span>3</span>
+                    <strong>Tradition</strong>
+                    <p>Fathers, saints, councils, and Aquinas.</p>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-screen" id="pray-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Pray</p>
+                  <h3>Rosary flow</h3>
+                </div>
+                <span class="trust-badge">Latin + English</span>
+              </div>
+              <div class="rosary-flow">
+                <div class="bead-row" aria-label="Rosary decade progress">
+                  <span></span><span></span><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <article class="source-answer prayer-step">
+                  <span>First Joyful Mystery</span>
+                  <h4>The Annunciation</h4>
+                  <p>
+                    Fruit of the mystery: humility. Begin with the Our Father, then pray ten
+                    Hail Marys while meditating on the angel's greeting.
+                  </p>
+                  <div class="source-list">
+                    <button>Audio</button>
+                    <button>Latin</button>
+                    <button>Add intention</button>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="app-screen" id="rosary-screen">
+              <div class="rosary-mode">
+                <div class="rosary-topline">
+                  <span>Joyful Mysteries</span>
+                  <strong>1 of 5</strong>
+                </div>
+                <h3>The Annunciation</h3>
+                <p class="rosary-meditation">
+                  The angel Gabriel announces that Mary will bear the Son of God. Meditate on
+                  humility, obedience, and trust.
+                </p>
+                <div class="rosary-ring" aria-label="Rosary progress ring">
+                  <span></span><span></span><span></span><span></span><span></span>
+                  <span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <article class="prayer-text">
+                  <span>Current prayer</span>
+                  <strong>Hail Mary</strong>
+                  <p>
+                    Hail Mary, full of grace, the Lord is with thee. Blessed art thou among
+                    women, and blessed is the fruit of thy womb, Jesus.
+                  </p>
+                </article>
+                <div class="rosary-actions">
+                  <button>Back</button>
+                  <button class="primary-action">Next Bead</button>
+                  <button>Latin</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-screen" id="community-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Community</p>
+                  <h3>Prayer-first participation</h3>
+                </div>
+                <span class="trust-badge">Moderated</span>
+              </div>
+              <div class="intention-wall">
+                <article>
+                  <strong>For my family to return to the sacraments.</strong>
+                  <span>42 people prayed</span>
+                  <button>I prayed</button>
+                </article>
+                <article>
+                  <strong>For a friend discerning conversion.</strong>
+                  <span>18 people prayed</span>
+                  <button>I prayed</button>
+                </article>
+                <article>
+                  <strong>For priests, seminarians, and religious vocations.</strong>
+                  <span>97 people prayed</span>
+                  <button>I prayed</button>
+                </article>
+              </div>
+            </section>
+
+            <section class="app-screen" id="intention-screen">
+              <div class="app-header">
+                <div>
+                  <p class="eyebrow">Prayer Intention</p>
+                  <h3>Share a request for prayer.</h3>
+                </div>
+                <span class="trust-badge">Prayer-first</span>
+              </div>
+              <div class="intention-form">
+                <label>
+                  <span>Intention</span>
+                  <textarea>For my family to return to the sacraments.</textarea>
+                </label>
+                <div class="form-row">
+                  <label>
+                    <span>Visibility</span>
+                    <select>
+                      <option>Public prayer wall</option>
+                      <option>Parish circle only</option>
+                      <option>Private</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Prayer group</span>
+                    <select>
+                      <option>General intentions</option>
+                      <option>Family and conversion</option>
+                      <option>Priests and vocations</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input id="moderation" type="checkbox" checked />
+                  <label for="moderation">Submit through community moderation.</label>
+                </div>
+                <button class="submit-intention">Post intention</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="mockup-grid" id="ask">
+        <article class="screen-card wide">
+          <div class="screen-copy">
+            <p class="eyebrow">Ask</p>
+            <h2>Citation-first Catholic chatbot</h2>
+            <p>
+              The assistant answers from Catholic sources and separates official teaching,
+              Scripture, Tradition, saints, and historical commentary.
+            </p>
+          </div>
+          <div class="chat-window">
+            <div class="search-bar">What does the Church teach about purgatory?</div>
+            <div class="answer-card">
+              <div class="answer-label">Answer with sources</div>
+              <p>
+                The Church teaches that those who die in God's grace but still need purification
+                undergo purification before entering the joy of heaven.
+              </p>
+              <div class="citation-row">
+                <span>Catechism 1030-1032</span>
+                <span>2 Maccabees 12:45</span>
+                <span>St. Gregory the Great</span>
+              </div>
+            </div>
+            <div class="doctrine-tags">
+              <span>Official Teaching</span>
+              <span>Scripture</span>
+              <span>Tradition</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="screen-card" id="library">
+          <p class="eyebrow">Library</p>
+          <h2>Reference shelves</h2>
+          <div class="shelf-list">
+            <div>
+              <strong>Magisterium</strong>
+              <span>Encyclicals, councils, papal documents</span>
+            </div>
+            <div>
+              <strong>Catechism</strong>
+              <span>Doctrine by topic, paragraph, and source</span>
+            </div>
+            <div>
+              <strong>Church Fathers</strong>
+              <span>Patristic texts and historical context</span>
+            </div>
+            <div>
+              <strong>St. Thomas Aquinas</strong>
+              <span>Summa and theological cross references</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="screen-card image-card">
+          <img src="./public/disputa.jpg" alt="Disputation of the Holy Sacrament artwork" />
+          <div>
+            <p class="eyebrow">Study Path</p>
+            <h2>The Eucharist</h2>
+            <p>Scripture, Catechism, Trent, Aquinas, saints, and devotional practice in one path.</p>
+          </div>
+        </article>
+
+        <article class="screen-card" id="pray">
+          <p class="eyebrow">Pray</p>
+          <h2>Traditional prayer companion</h2>
+          <div class="prayer-card active">
+            <span>Rosary</span>
+            <strong>Joyful Mysteries</strong>
+            <small>Guide, audio, Latin toggle, intentions</small>
+          </div>
+          <div class="prayer-card">
+            <span>Chaplet</span>
+            <strong>Divine Mercy</strong>
+            <small>3 PM reminder and prayer history</small>
+          </div>
+          <div class="prayer-card">
+            <span>Novenas</span>
+            <strong>St. Joseph, Sacred Heart, Holy Spirit</strong>
+            <small>Daily prompts and shared groups</small>
+          </div>
+        </article>
+
+        <article class="screen-card" id="community">
+          <p class="eyebrow">Community</p>
+          <h2>Reverent, moderated spaces</h2>
+          <div class="intention-list">
+            <div>
+              <strong>Prayer Intentions</strong>
+              <span>"For my family to return to the sacraments."</span>
+            </div>
+            <div>
+              <strong>Catechism Group</strong>
+              <span>Week 4: The Creed, paragraphs 198-231</span>
+            </div>
+            <div>
+              <strong>Parish Circle</strong>
+              <span>Adoration, Mass times, study nights</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="screen-card wide dark-card">
+          <img src="./public/last-supper.jpg" alt="The Last Supper artwork" />
+          <div>
+            <p class="eyebrow">Daily Rhythm</p>
+            <h2>Learn, pray, participate.</h2>
+            <p>
+              A daily page could combine saint of the day, readings, one traditional prayer,
+              one short teaching, and one community intention.
+            </p>
+          </div>
+        </article>
+      </section>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>

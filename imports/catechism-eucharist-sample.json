@@ -1,0 +1,36 @@
+{
+  "source": {
+    "title": "Catechism Eucharist Sample",
+    "source_url": "https://www.vatican.va/archive/ENG0015/_P3W.HTM",
+    "publisher": "Vatican",
+    "authority_tier": 1,
+    "source_type": "catechism",
+    "status": "draft"
+  },
+  "chunks": [
+    {
+      "citation_label": "CCC 1324",
+      "section_label": "CCC 1324",
+      "paragraph_number": "1324",
+      "authority_tier": 1,
+      "token_count": 52,
+      "chunk_text": "The Eucharist is the source and summit of the Christian life. The other sacraments, and indeed all ecclesiastical ministries and works of the apostolate, are bound up with the Eucharist and are oriented toward it."
+    },
+    {
+      "citation_label": "CCC 1325",
+      "section_label": "CCC 1325",
+      "paragraph_number": "1325",
+      "authority_tier": 1,
+      "token_count": 48,
+      "chunk_text": "The Eucharist is the efficacious sign and sublime cause of that communion in the divine life and that unity of the People of God by which the Church is kept in being."
+    },
+    {
+      "citation_label": "CCC 1327",
+      "section_label": "CCC 1327",
+      "paragraph_number": "1327",
+      "authority_tier": 1,
+      "token_count": 46,
+      "chunk_text": "In brief, the Eucharist is the sum and summary of our faith. Our way of thinking is attuned to the Eucharist, and the Eucharist in turn confirms our way of thinking."
+    }
+  ]
+}

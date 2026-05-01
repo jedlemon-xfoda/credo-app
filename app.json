@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "CREDO",
+    "slug": "credo",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "credo",
+    "icon": "./public/ordinary-catholic-logo.jpg",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "splash": {
+      "image": "./public/ordinary-catholic-logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#fffdf8"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./public/ordinary-catholic-logo.jpg",
+        "backgroundColor": "#fffdf8"
+      }
+    },
+    "web": {
+      "favicon": "./public/ordinary-catholic-logo.jpg"
+    }
+  }
+}

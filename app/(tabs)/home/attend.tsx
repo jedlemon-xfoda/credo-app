@@ -1,3 +1,4 @@
+import { resolveMassTextBlock } from "../../../utils/resolveMassText";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -8,6 +9,11 @@ import { labelPosture, massFlowSections, massFlowSteps } from "../../../data/mas
 import { useDailyJourney } from "../../../hooks/useDailyJourney";
 import { useUserMassProfile } from "../../../hooks/useUserMassProfile";
 import type { MassFlowStep, MassTextBlock } from "../../../types";
+
+const MASS_CONTENT: Record<string, string> = {
+  greeting: "The Lord be with you.",
+  response_and_with_your_spirit: "And with your spirit."
+};
 
 type AttendMode = "guided" | "quiet";
 
@@ -252,7 +258,12 @@ export default function AttendScreen() {
 }
 
 function MassTextBlocks({ blocks }: { blocks: MassTextBlock[] }) {
-  const visibleBlocks = blocks.filter((block) => block.text.trim().length > 0);
+
+  const resolvedBlocks = blocks.map((block) =>
+    resolveMassTextBlock(block, MASS_CONTENT)
+  );
+
+  const visibleBlocks = resolvedBlocks.filter((block) => block.text.trim().length > 0);
 
   if (visibleBlocks.length === 0) {
     return null;

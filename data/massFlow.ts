@@ -61,7 +61,12 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Greeting",
         summary: "The celebrant greets the assembly in the name of the Lord.",
         posture: "stand",
-        textBlocks: [textBlock("greeting-celebrant", "celebrant", "The celebrant greets the assembly.")],
+        textBlocks: [
+  {
+    ...textBlock("greeting-celebrant", "celebrant", "Fallback greeting"),
+    contentKey: "greeting",
+  }
+],
         guidance: "Receive the greeting as the beginning of sacred worship.",
         listenAnchors: anchors("The Lord be with you")
       },

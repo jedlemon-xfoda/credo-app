@@ -26,6 +26,48 @@ type SectionInput = {
   steps: StepInput[];
 };
 
+export type MassFlowBranchKind =
+  | "penitential_act"
+  | "sprinkling_rite"
+  | "eucharistic_prayer"
+  | "gospel_acclamation"
+  | "creed"
+  | "dismissal"
+  | "blessing";
+
+export type LiturgicalSeason = "advent" | "christmas" | "lent" | "easter" | "ordinary";
+
+export type ResponseLanguage = "english" | "latin" | "greek";
+
+export type MassFlowBranch = {
+  id: string;
+  kind: MassFlowBranchKind;
+  title: string;
+  replacesStepId?: string;
+  insertsAfterStepId?: string;
+  preferredSeason?: LiturgicalSeason[];
+  responseLanguage?: ResponseLanguage;
+  guidedItems: MassGuidedItem[];
+  fullPrayerKeys?: string[];
+};
+
+export type MassFlowResolverContext = {
+  season?: LiturgicalSeason;
+  penitentialAct?: "confiteor" | "dialogue" | "tropes";
+  useSprinklingRite?: boolean;
+  eucharisticPrayer?: "ep-i" | "ep-ii" | "ep-iii" | "ep-iv";
+  gospelAcclamation?: "ordinary" | "lent";
+  creed?: "nicene" | "apostles";
+  dismissal?: "ordinary" | "easter";
+  blessing?: "simple" | "solemn";
+  responseLanguage?: ResponseLanguage;
+};
+
+export type ResolvedMassFlowConfiguration = {
+  branchIds: string[];
+  branches: MassFlowBranch[];
+};
+
 function textBlock(id: string, role: MassTextBlock["role"], text: string, source = reviewSource): MassTextBlock {
   return { id, role, text, source };
 }
@@ -45,6 +87,15 @@ function anchors(...phrases: string[]): ListenAnchor[] {
     phrase,
     confidenceHint: "medium"
   }));
+}
+
+function branchItem(
+  id: string,
+  guidanceType: MassGuidedItem["guidanceType"],
+  text: string,
+  options: Omit<MassGuidedItem, "id" | "guidanceType" | "text"> = {}
+): MassGuidedItem {
+  return guidedItem(id, guidanceType, text, options);
 }
 
 const sectionInputs: SectionInput[] = [
@@ -834,6 +885,267 @@ const sectionInputs: SectionInput[] = [
     ]
   }
 ];
+
+export const eucharisticPrayerSharedCadence = {
+  prefaceDialogueStepId: "preface",
+  sanctusStepId: "holy",
+  consecrationStepId: "consecration",
+  mysteryOfFaithStepId: "mystery-of-faith",
+  doxologyStepId: "doxology",
+  requiredMomentIds: [
+    "ep-shared-epiclesis",
+    "ep-shared-institution-body",
+    "ep-shared-host-elevation",
+    "ep-shared-institution-chalice",
+    "ep-shared-chalice-elevation",
+    "ep-shared-memorial-acclamation",
+    "ep-shared-great-amen"
+  ]
+};
+
+export const massResponseLanguageOptions = {
+  response_and_with_your_spirit: {
+    english: "And with your spirit.",
+    latin: "Et cum spiritu tuo."
+  },
+  kyrie: {
+    english: "Lord, have mercy.\nChrist, have mercy.\nLord, have mercy.",
+    greek: "Kyrie, eleison.\nChriste, eleison.\nKyrie, eleison."
+  },
+  holy: {
+    english: "Holy, Holy, Holy Lord God of hosts.",
+    latin: "Sanctus, Sanctus, Sanctus Dominus Deus Sabaoth."
+  },
+  lamb_of_god: {
+    english: "Lamb of God, you take away the sins of the world.",
+    latin: "Agnus Dei, qui tollis peccata mundi."
+  }
+} as const;
+
+export const massFlowBranchGroups: MassFlowBranch[] = [
+  {
+    id: "penitential-confiteor",
+    kind: "penitential_act",
+    title: "Penitential Act: Confiteor",
+    replacesStepId: "penitential-act",
+    guidedItems: [
+      branchItem("branch-confiteor-intro", "listen", "Let us acknowledge our sins.", { posture: "stand" }),
+      branchItem("branch-confiteor-prayer", "you_say", "I confess to almighty God", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-fault-1", "you_say", "through my fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-fault-2", "you_say", "through my fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-fault-3", "you_say", "through my most grievous fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-confiteor-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["confiteor", "response_amen"]
+  },
+  {
+    id: "penitential-dialogue",
+    kind: "penitential_act",
+    title: "Penitential Act: Dialogue Form",
+    replacesStepId: "penitential-act",
+    guidedItems: [
+      branchItem("branch-dialogue-intro", "listen", "Let us acknowledge our sins.", { posture: "stand" }),
+      branchItem("branch-dialogue-have-mercy", "listen", "Have mercy on us, O Lord.", { posture: "stand" }),
+      branchItem("branch-dialogue-sinned", "you_say", "For we have sinned against you.", { posture: "stand", fullPrayerKey: "penitential_dialogue" }),
+      branchItem("branch-dialogue-show-mercy", "listen", "Show us, O Lord, your mercy.", { posture: "stand" }),
+      branchItem("branch-dialogue-salvation", "you_say", "And grant us your salvation.", { posture: "stand", fullPrayerKey: "penitential_dialogue" }),
+      branchItem("branch-dialogue-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-dialogue-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["penitential_dialogue", "response_amen"]
+  },
+  {
+    id: "penitential-tropes",
+    kind: "penitential_act",
+    title: "Penitential Act: Kyrie Tropes",
+    replacesStepId: "penitential-act",
+    guidedItems: [
+      branchItem("branch-tropes-intro", "listen", "The celebrant or deacon sings or says invocations.", { posture: "stand" }),
+      branchItem("branch-tropes-lord", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
+      branchItem("branch-tropes-christ", "you_say", "Christ, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
+      branchItem("branch-tropes-lord-repeat", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
+      branchItem("branch-tropes-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-tropes-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["penitential_tropes", "response_amen"]
+  },
+  {
+    id: "sprinkling-rite",
+    kind: "sprinkling_rite",
+    title: "Sprinkling Rite",
+    replacesStepId: "penitential-act",
+    preferredSeason: ["easter"],
+    guidedItems: [
+      branchItem("branch-sprinkling-intro", "listen", "The celebrant blesses water.", { posture: "stand", fullPrayerKey: "sprinkling_rite" }),
+      branchItem("branch-sprinkling-ambient", "ambient", "The people are sprinkled as a reminder of Baptism.", { posture: "stand" }),
+      branchItem("branch-sprinkling-song", "listen", "A chant or hymn may accompany the sprinkling.", { posture: "stand" }),
+      branchItem("branch-sprinkling-collect", "listen", "The celebrant concludes the rite.", { posture: "stand" }),
+      branchItem("branch-sprinkling-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["sprinkling_rite", "response_amen"]
+  },
+  {
+    id: "gospel-acclamation-ordinary",
+    kind: "gospel_acclamation",
+    title: "Gospel Acclamation: Alleluia",
+    replacesStepId: "gospel-acclamation",
+    preferredSeason: ["advent", "christmas", "easter", "ordinary"],
+    guidedItems: [
+      branchItem("branch-gospel-ordinary-stand", "you_do", "Stand to welcome the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-ordinary-alleluia", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" }),
+      branchItem("branch-gospel-ordinary-verse", "listen", "Listen to the acclamation verse.", { posture: "stand" }),
+      branchItem("branch-gospel-ordinary-repeat", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" })
+    ],
+    fullPrayerKeys: ["response_alleluia"]
+  },
+  {
+    id: "gospel-acclamation-lent",
+    kind: "gospel_acclamation",
+    title: "Gospel Acclamation: Lent",
+    replacesStepId: "gospel-acclamation",
+    preferredSeason: ["lent"],
+    guidedItems: [
+      branchItem("branch-gospel-lent-stand", "you_do", "Stand to welcome the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-lent-acclamation", "you_say", "Praise to you, Lord Jesus Christ, King of endless glory.", {
+        posture: "stand",
+        fullPrayerKey: "response_lent_gospel_acclamation"
+      }),
+      branchItem("branch-gospel-lent-verse", "listen", "Listen to the Lenten acclamation verse.", { posture: "stand" }),
+      branchItem("branch-gospel-lent-repeat", "you_say", "Praise to you, Lord Jesus Christ, King of endless glory.", {
+        posture: "stand",
+        fullPrayerKey: "response_lent_gospel_acclamation"
+      })
+    ],
+    fullPrayerKeys: ["response_lent_gospel_acclamation"]
+  },
+  {
+    id: "creed-nicene",
+    kind: "creed",
+    title: "Nicene Creed",
+    replacesStepId: "profession-of-faith",
+    guidedItems: [
+      branchItem("branch-nicene-stand", "you_do", "Stand for the Profession of Faith.", { posture: "stand" }),
+      branchItem("branch-nicene-begin", "you_say", "I believe in one God,", { posture: "stand", fullPrayerKey: "nicene_creed" }),
+      branchItem("branch-nicene-bow", "you_do", "Bow at the words of the Incarnation.", { posture: "stand" }),
+      branchItem("branch-nicene-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["nicene_creed", "response_amen"]
+  },
+  {
+    id: "creed-apostles",
+    kind: "creed",
+    title: "Apostles' Creed",
+    replacesStepId: "profession-of-faith",
+    guidedItems: [
+      branchItem("branch-apostles-stand", "you_do", "Stand for the Profession of Faith.", { posture: "stand" }),
+      branchItem("branch-apostles-begin", "you_say", "I believe in God, the Father almighty,", { posture: "stand", fullPrayerKey: "apostles_creed" }),
+      branchItem("branch-apostles-bow", "you_do", "Bow at the words of the Incarnation.", { posture: "stand" }),
+      branchItem("branch-apostles-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["apostles_creed", "response_amen"]
+  },
+  ...(["i", "ii", "iii", "iv"] as const).map((number) => ({
+    id: `eucharistic-prayer-${number}`,
+    kind: "eucharistic_prayer" as const,
+    title: `Eucharistic Prayer ${number.toUpperCase()}`,
+    insertsAfterStepId: "preface",
+    guidedItems: [
+      branchItem(`branch-ep-${number}-proper`, "listen", `Eucharistic Prayer ${number.toUpperCase()} begins.`, {
+        posture: "stand",
+        fullPrayerKey: `eucharistic_prayer_${number}`
+      }),
+      branchItem(`branch-ep-${number}-epiclesis`, "listen", "The celebrant calls down the Holy Spirit upon the gifts.", { posture: "kneel" }),
+      branchItem(`branch-ep-${number}-body`, "listen", "This is my Body.", { posture: "kneel" }),
+      branchItem(`branch-ep-${number}-host-elevation`, "ambient", "Adore Christ present in the sacred Host.", { posture: "kneel" }),
+      branchItem(`branch-ep-${number}-chalice`, "listen", "This is the chalice of my Blood.", { posture: "kneel" }),
+      branchItem(`branch-ep-${number}-chalice-elevation`, "ambient", "Adore Christ present in the Precious Blood.", { posture: "kneel" }),
+      branchItem(`branch-ep-${number}-memorial`, "you_say", "We proclaim your Death, O Lord.", { posture: "kneel", fullPrayerKey: "mystery_of_faith" }),
+      branchItem(`branch-ep-${number}-amen`, "you_say", "Amen.", { posture: "kneel", fullPrayerKey: "response_great_amen" })
+    ],
+    fullPrayerKeys: [`eucharistic_prayer_${number}`, "mystery_of_faith", "response_great_amen"]
+  })),
+  {
+    id: "dismissal-ordinary",
+    kind: "dismissal",
+    title: "Dismissal: Ordinary",
+    replacesStepId: "dismissal",
+    guidedItems: [
+      branchItem("branch-dismissal-ordinary-listen", "listen", "Go in peace.", { posture: "stand" }),
+      branchItem("branch-dismissal-ordinary-response", "you_say", "Thanks be to God.", { posture: "stand", fullPrayerKey: "response_thanks_be_to_god" })
+    ],
+    fullPrayerKeys: ["response_thanks_be_to_god"]
+  },
+  {
+    id: "dismissal-easter",
+    kind: "dismissal",
+    title: "Dismissal: Easter",
+    replacesStepId: "dismissal",
+    preferredSeason: ["easter"],
+    guidedItems: [
+      branchItem("branch-dismissal-easter-listen", "listen", "Go in peace, alleluia, alleluia.", { posture: "stand" }),
+      branchItem("branch-dismissal-easter-response", "you_say", "Thanks be to God, alleluia, alleluia.", {
+        posture: "stand",
+        fullPrayerKey: "response_easter_dismissal_alleluia"
+      })
+    ],
+    fullPrayerKeys: ["response_easter_dismissal_alleluia"]
+  },
+  {
+    id: "blessing-simple",
+    kind: "blessing",
+    title: "Blessing: Simple",
+    replacesStepId: "blessing",
+    guidedItems: [
+      branchItem("branch-blessing-simple-cross", "you_do", "Make the Sign of the Cross as the blessing is given.", { posture: "stand" }),
+      branchItem("branch-blessing-simple-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
+    ],
+    fullPrayerKeys: ["response_amen"]
+  },
+  {
+    id: "blessing-solemn",
+    kind: "blessing",
+    title: "Blessing: Solemn",
+    replacesStepId: "blessing",
+    guidedItems: [
+      branchItem("branch-blessing-solemn-intro", "listen", "Bow down for the blessing.", { posture: "stand", fullPrayerKey: "solemn_blessing" }),
+      branchItem("branch-blessing-solemn-amen-1", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" }),
+      branchItem("branch-blessing-solemn-amen-2", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" }),
+      branchItem("branch-blessing-solemn-amen-3", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" }),
+      branchItem("branch-blessing-solemn-cross", "you_do", "Make the Sign of the Cross as the final blessing is given.", { posture: "stand" })
+    ],
+    fullPrayerKeys: ["solemn_blessing", "response_amen"]
+  }
+];
+
+function getBranch(id: string) {
+  return massFlowBranchGroups.find((branch) => branch.id === id);
+}
+
+export function resolveMassFlowConfiguration(context: MassFlowResolverContext = {}): ResolvedMassFlowConfiguration {
+  const penitentialSelection = context.responseLanguage === "greek" && !context.penitentialAct ? "tropes" : (context.penitentialAct ?? "confiteor");
+  const penitentialId = context.useSprinklingRite
+    ? "sprinkling-rite"
+    : `penitential-${penitentialSelection}`;
+  const gospelAcclamationId = context.gospelAcclamation
+    ? `gospel-acclamation-${context.gospelAcclamation}`
+    : context.season === "lent"
+      ? "gospel-acclamation-lent"
+      : "gospel-acclamation-ordinary";
+  const branchIds = [
+    penitentialId,
+    `eucharistic-prayer-${context.eucharisticPrayer?.replace("ep-", "") ?? "ii"}`,
+    gospelAcclamationId,
+    `creed-${context.creed ?? "nicene"}`,
+    `dismissal-${context.dismissal ?? (context.season === "easter" ? "easter" : "ordinary")}`,
+    `blessing-${context.blessing ?? "simple"}`
+  ].filter((id): id is string => Boolean(id && getBranch(id)));
+
+  return {
+    branchIds,
+    branches: branchIds.map((id) => getBranch(id)).filter((branch): branch is MassFlowBranch => Boolean(branch))
+  };
+}
 
 export const massFlowSections: MassFlowSection[] = sectionInputs.map((section) => ({
   id: section.id,

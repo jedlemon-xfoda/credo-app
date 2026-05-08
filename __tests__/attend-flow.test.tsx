@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import AttendScreen from "../app/(tabs)/home/attend";
 import { storageKeys } from "../constants/storage";
-import { massFlowSteps } from "../data/massFlow";
+import { eucharisticPrayerSharedCadence, massFlowBranchGroups, massFlowSteps, massResponseLanguageOptions, resolveMassFlowConfiguration } from "../data/massFlow";
 import { MASS_CONTENT } from "../services/massContent";
 import { createDefaultJourneyState, getLocalDateKey } from "../services/journeyState";
 import * as journeyStateService from "../services/journeyState";
@@ -119,6 +119,105 @@ describe("Attend flow", () => {
   it("Communion Rite and Dismissal are not incorrectly marked optional", () => {
     expect(massFlowSteps.find((step) => step.id === "communion")?.optional).toBeUndefined();
     expect(massFlowSteps.find((step) => step.id === "dismissal")?.optional).toBeUndefined();
+  });
+
+  it("branch guided moments have unique IDs and resolvable full prayer keys", () => {
+    const guidedItems = massFlowBranchGroups.flatMap((branch) => branch.guidedItems);
+    const guidedIds = guidedItems.map((item) => item.id);
+    expect(new Set(guidedIds).size).toBe(guidedIds.length);
+
+    const itemKeys = guidedItems
+      .map((item) => item.fullPrayerKey)
+      .filter((key): key is string => Boolean(key));
+    const branchKeys = massFlowBranchGroups.flatMap((branch) => branch.fullPrayerKeys ?? []);
+    const missingKeys = [...itemKeys, ...branchKeys].filter((key) => !MASS_CONTENT[key]);
+
+    expect(missingKeys).toEqual([]);
+  });
+
+  it("defines Penitential Act variants and Sprinkling Rite replacement branch", () => {
+    const branchIds = massFlowBranchGroups.map((branch) => branch.id);
+
+    expect(branchIds).toEqual(expect.arrayContaining(["penitential-confiteor", "penitential-dialogue", "penitential-tropes", "sprinkling-rite"]));
+    for (const branchId of ["penitential-confiteor", "penitential-dialogue", "penitential-tropes", "sprinkling-rite"]) {
+      const branch = massFlowBranchGroups.find((candidate) => candidate.id === branchId);
+      expect(branch?.replacesStepId).toBe("penitential-act");
+      expect(branch?.guidedItems.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("defines Gospel Acclamation branches for ordinary time and Lent", () => {
+    const ordinary = massFlowBranchGroups.find((branch) => branch.id === "gospel-acclamation-ordinary");
+    const lent = massFlowBranchGroups.find((branch) => branch.id === "gospel-acclamation-lent");
+
+    expect(ordinary?.replacesStepId).toBe("gospel-acclamation");
+    expect(lent?.replacesStepId).toBe("gospel-acclamation");
+    expect(ordinary?.fullPrayerKeys).toContain("response_alleluia");
+    expect(lent?.fullPrayerKeys).toContain("response_lent_gospel_acclamation");
+  });
+
+  it("defines Nicene and Apostles Creed branches", () => {
+    const nicene = massFlowBranchGroups.find((branch) => branch.id === "creed-nicene");
+    const apostles = massFlowBranchGroups.find((branch) => branch.id === "creed-apostles");
+
+    expect(nicene?.replacesStepId).toBe("profession-of-faith");
+    expect(apostles?.replacesStepId).toBe("profession-of-faith");
+    expect(nicene?.fullPrayerKeys).toContain("nicene_creed");
+    expect(apostles?.fullPrayerKeys).toContain("apostles_creed");
+  });
+
+  it("defines Eucharistic Prayer I-IV branches using the shared cadence scaffold", () => {
+    const epBranches = massFlowBranchGroups.filter((branch) => branch.kind === "eucharistic_prayer");
+
+    expect(epBranches.map((branch) => branch.id).sort()).toEqual(["eucharistic-prayer-i", "eucharistic-prayer-ii", "eucharistic-prayer-iii", "eucharistic-prayer-iv"]);
+    expect(eucharisticPrayerSharedCadence.requiredMomentIds).toEqual(
+      expect.arrayContaining(["ep-shared-epiclesis", "ep-shared-institution-body", "ep-shared-memorial-acclamation", "ep-shared-great-amen"])
+    );
+
+    for (const branch of epBranches) {
+      expect(branch.insertsAfterStepId).toBe("preface");
+      expect(branch.guidedItems.map((item) => item.id)).toEqual(
+        expect.arrayContaining([
+          expect.stringMatching(/epiclesis/),
+          expect.stringMatching(/body/),
+          expect.stringMatching(/host-elevation/),
+          expect.stringMatching(/chalice/),
+          expect.stringMatching(/memorial/),
+          expect.stringMatching(/amen/)
+        ])
+      );
+    }
+  });
+
+  it("defines Easter dismissal and solemn blessing branches", () => {
+    const easterDismissal = massFlowBranchGroups.find((branch) => branch.id === "dismissal-easter");
+    const solemnBlessing = massFlowBranchGroups.find((branch) => branch.id === "blessing-solemn");
+
+    expect(easterDismissal?.replacesStepId).toBe("dismissal");
+    expect(easterDismissal?.preferredSeason).toContain("easter");
+    expect(easterDismissal?.fullPrayerKeys).toContain("response_easter_dismissal_alleluia");
+    expect(solemnBlessing?.replacesStepId).toBe("blessing");
+    expect(solemnBlessing?.fullPrayerKeys).toContain("solemn_blessing");
+  });
+
+  it("resolves date-aware branch defaults without a hardcoded calendar engine", () => {
+    expect(resolveMassFlowConfiguration().branchIds).toEqual(
+      expect.arrayContaining(["penitential-confiteor", "eucharistic-prayer-ii", "gospel-acclamation-ordinary", "creed-nicene", "dismissal-ordinary", "blessing-simple"])
+    );
+    expect(resolveMassFlowConfiguration({ season: "lent" }).branchIds).toContain("gospel-acclamation-lent");
+    expect(resolveMassFlowConfiguration({ season: "easter", useSprinklingRite: true }).branchIds).toEqual(
+      expect.arrayContaining(["sprinkling-rite", "dismissal-easter"])
+    );
+    expect(resolveMassFlowConfiguration({ eucharisticPrayer: "ep-iv", creed: "apostles", blessing: "solemn" }).branchIds).toEqual(
+      expect.arrayContaining(["eucharistic-prayer-iv", "creed-apostles", "blessing-solemn"])
+    );
+  });
+
+  it("supports Latin and Greek response scaffolding in the data layer", () => {
+    expect(massResponseLanguageOptions.response_and_with_your_spirit.latin).toBe("Et cum spiritu tuo.");
+    expect(massResponseLanguageOptions.kyrie.greek).toContain("Kyrie");
+    expect(massResponseLanguageOptions.holy.latin).toContain("Sanctus");
+    expect(resolveMassFlowConfiguration({ responseLanguage: "greek" }).branchIds).toContain("penitential-tropes");
   });
 
   it("resumes persisted attendPosition", async () => {

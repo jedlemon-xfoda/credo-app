@@ -201,6 +201,13 @@ describe("Attend flow", () => {
     expect(lent?.replacesStepId).toBe("gospel-acclamation");
     expect(ordinary?.fullPrayerKeys).toContain("response_alleluia");
     expect(lent?.fullPrayerKeys).toContain("response_lent_gospel_acclamation");
+    expect(ordinary?.guidedItems.map((item) => item.text)).toEqual(
+      expect.arrayContaining(["Stand for the Gospel.", "Alleluia.", "Prepare to hear the Gospel."])
+    );
+    expect(lent?.guidedItems.map((item) => item.text)).toEqual(
+      expect.arrayContaining(["Stand for the Gospel.", "Praise to you, Lord Jesus Christ, King of endless glory.", "Prepare to hear the Gospel."])
+    );
+    expect(lent?.guidedItems.map((item) => item.text)).not.toContain("Alleluia.");
   });
 
   it("defines Nicene and Apostles Creed branches", () => {
@@ -784,6 +791,35 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
+  it("guides the Gospel Acclamation as stand, acclamation, verse placeholder, acclamation", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "gospel-acclamation"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Stand for the Gospel.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Alleluia.")).toBeTruthy();
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Prepare to hear the Gospel.")).toBeTruthy();
+    expect(screen.queryByText("Listen to the Gospel acclamation verse.")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Alleluia.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
   it("opens variant and full-prayer overlays without advancing the guided index", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
@@ -1199,18 +1235,57 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+      expect(screen.getByText("Stand as the Gospel is brought forward.")).toBeTruthy();
     });
+    expect(screen.getByText("The Gospel procession begins.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
     expect(screen.getByText("And with your spirit.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("A reading from the holy Gospel according to the evangelist.")).toBeTruthy();
+    expect(screen.queryByText("Make a small cross on your forehead, lips, and heart.")).toBeNull();
+    expect(screen.queryByText("Glory to you, O Lord.")).toBeNull();
 
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("Make a small cross on your forehead, lips, and heart.")).toBeTruthy();
     expect(screen.getByText("Glory to you, O Lord.")).toBeTruthy();
+    expect(textOrder("Make a small cross on your forehead, lips, and heart.", "Glory to you, O Lord.")).toBeLessThan(0);
+    expect(screen.queryByText("(forehead, lips, heart)")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
 
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Listen to the Gospel.")).toBeTruthy();
+    expect(screen.queryByText("The Gospel is proclaimed.")).toBeNull();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("The Gospel of the Lord.")).toBeTruthy();
     expect(screen.getByText("Praise to you, Lord Jesus Christ.")).toBeTruthy();
+  });
+
+  it("keeps the Homily quiet and non-instructional", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "homily"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Sit for the Homily.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Listen for one truth to carry.")).toBeTruthy();
+    expect(screen.getByText("Let the Word settle.")).toBeTruthy();
+    expect(screen.queryByText("Ask what the Lord wants you to carry.")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
   it("shows the Preface dialogue as guided response cadence", async () => {

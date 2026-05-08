@@ -67,6 +67,10 @@ export type MassFlowResolverContext = {
   secondReadingText?: string;
   secondReadingPresence?: "present" | "omitted";
   hasSecondReading?: boolean;
+  gospelAcclamationVerseKey?: string;
+  gospelAcclamationVerseText?: string;
+  gospelProclamationKey?: string;
+  gospelProclamationText?: string;
   penitentialAct?: "confiteor" | "dialogue" | "tropes";
   useSprinklingRite?: boolean;
   gloria?: "prescribed" | "omitted";
@@ -465,13 +469,13 @@ const sectionInputs: SectionInput[] = [
           textBlock("gospel-acclamation-you", "you", "The acclamation welcomes Christ present in the Gospel.", companionSource)
         ],
         guidedItems: [
-          guidedItem("gospel-acclamation-stand", "you_do", "Stand to welcome the Gospel.", {
+          guidedItem("gospel-acclamation-stand", "you_do", "Stand for the Gospel.", {
             posture: "stand"
           }),
           guidedItem("gospel-acclamation-alleluia", "you_say", "Alleluia.", {
             posture: "stand"
           }),
-          guidedItem("gospel-acclamation-verse", "listen", "Listen to the Gospel acclamation verse.", {
+          guidedItem("gospel-acclamation-verse", "listen", "Prepare to hear the Gospel.", {
             posture: "stand"
           }),
           guidedItem("gospel-acclamation-repeat", "you_say", "Alleluia.", {
@@ -492,6 +496,10 @@ const sectionInputs: SectionInput[] = [
           textBlock("gospel-celebrant", "celebrant", "If no deacon is present, the celebrant proclaims the Gospel.")
         ],
         guidedItems: [
+          guidedItem("gospel-procession", "you_do", "Stand as the Gospel is brought forward.", {
+            posture: "stand",
+            durationHint: "The Gospel procession begins."
+          }),
           guidedItem("gospel-dialogue-listen", "listen", "The Lord be with you.", {
             posture: "stand"
           }),
@@ -503,8 +511,7 @@ const sectionInputs: SectionInput[] = [
             posture: "stand"
           }),
           guidedItem("gospel-small-crosses", "you_do", "Make a small cross on your forehead, lips, and heart.", {
-            posture: "stand",
-            cadenceCue: "forehead, lips, heart"
+            posture: "stand"
           }),
           guidedItem("gospel-announcement-response", "you_say", "Glory to you, O Lord.", {
             posture: "stand",
@@ -530,7 +537,7 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Homily",
         summary: "The Word is opened for the assembly.",
         posture: "sit",
-        textBlocks: [textBlock("homily-celebrant-or-deacon", "celebrant", "The homily helps the Word take root.")],
+        textBlocks: [textBlock("homily-celebrant-or-deacon", "celebrant", "The homily is given.")],
         guidedItems: [
           guidedItem("homily-sit", "you_do", "Sit for the Homily.", {
             posture: "sit"
@@ -540,7 +547,7 @@ const sectionInputs: SectionInput[] = [
             durationHint: "Let the Word settle."
           })
         ],
-        guidance: "Ask what the Lord wants you to carry.",
+        guidance: "Let the Word settle.",
         listenAnchors: anchors("Homily")
       },
       {
@@ -1179,9 +1186,9 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     replacesStepId: "gospel-acclamation",
     preferredSeason: ["advent", "christmas", "easter", "ordinary"],
     guidedItems: [
-      branchItem("branch-gospel-ordinary-stand", "you_do", "Stand to welcome the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-ordinary-stand", "you_do", "Stand for the Gospel.", { posture: "stand" }),
       branchItem("branch-gospel-ordinary-alleluia", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" }),
-      branchItem("branch-gospel-ordinary-verse", "listen", "Listen to the acclamation verse.", { posture: "stand" }),
+      branchItem("branch-gospel-ordinary-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand" }),
       branchItem("branch-gospel-ordinary-repeat", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" })
     ],
     fullPrayerKeys: ["response_alleluia"]
@@ -1193,12 +1200,12 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     replacesStepId: "gospel-acclamation",
     preferredSeason: ["lent"],
     guidedItems: [
-      branchItem("branch-gospel-lent-stand", "you_do", "Stand to welcome the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-lent-stand", "you_do", "Stand for the Gospel.", { posture: "stand" }),
       branchItem("branch-gospel-lent-acclamation", "you_say", "Praise to you, Lord Jesus Christ, King of endless glory.", {
         posture: "stand",
         fullPrayerKey: "response_lent_gospel_acclamation"
       }),
-      branchItem("branch-gospel-lent-verse", "listen", "Listen to the Lenten acclamation verse.", { posture: "stand" }),
+      branchItem("branch-gospel-lent-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand" }),
       branchItem("branch-gospel-lent-repeat", "you_say", "Praise to you, Lord Jesus Christ, King of endless glory.", {
         posture: "stand",
         fullPrayerKey: "response_lent_gospel_acclamation"

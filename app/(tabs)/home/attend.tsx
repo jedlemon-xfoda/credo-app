@@ -522,7 +522,7 @@ function getCadenceGroup(stepId: string, itemId: string) {
     "second-reading": [["second-reading-ending", "second-reading-response"]],
     gospel: [
       ["gospel-dialogue-listen", "gospel-dialogue-response"],
-      ["gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response"],
+      ["gospel-small-crosses", "gospel-announcement-response"],
       ["gospel-ending-listen", "gospel-ending-response"]
     ],
     presentation: [

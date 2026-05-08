@@ -13,6 +13,7 @@ import {
   resolveGloriaStatus,
   resolveMassFlowConfiguration,
   resolvePenitentialActForm,
+  resolveSecondReadingPresence,
   shouldIncludeStandaloneKyrie
 } from "../data/massFlow";
 import { MASS_CONTENT } from "../services/massContent";
@@ -272,6 +273,10 @@ describe("Attend flow", () => {
     expect(resolveMassFlowConfiguration({ massDayKind: "sunday" }).branchIds).toContain("gloria-prescribed");
     expect(resolveMassFlowConfiguration({ massDayKind: "weekday" }).branchIds).toContain("gloria-omitted");
     expect(resolveGloriaStatus({ massDayKind: "weekday" })).toBe("omitted");
+    expect(resolveMassFlowConfiguration({ massDayKind: "sunday" }).hasSecondReading).toBe(true);
+    expect(resolveMassFlowConfiguration({ massDayKind: "weekday" }).hasSecondReading).toBe(false);
+    expect(resolveMassFlowConfiguration({ hasSecondReading: true }).hasSecondReading).toBe(true);
+    expect(resolveSecondReadingPresence({ secondReadingText: "A reading from the Letter of Saint Paul." })).toBe("present");
   });
 
   it("supports Latin and Greek response scaffolding in the data layer", () => {
@@ -693,6 +698,89 @@ describe("Attend flow", () => {
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("Thanks be to God.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
+  it("guides the First Reading with contemplative wording and grouped response", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "first-reading"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Sit for the First Reading.")).toBeTruthy();
+    });
+    expect(screen.queryByText("A reading from Sacred Scripture is proclaimed.")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Listen to the reading.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The word of the Lord.")).toBeTruthy();
+    expect(screen.getByText("Thanks be to God.")).toBeTruthy();
+    expect(textOrder("The word of the Lord.", "Thanks be to God.")).toBeLessThan(0);
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
+  it("guides the Psalm response without mechanical wording or unresolved full prayer", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "psalm"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("The psalm response is announced.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Repeat the psalm response.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Listen to the psalm verses.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Join in the response.")).toBeTruthy();
+    expect(screen.queryByText("Repeat the response when it returns.")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
+  it("keeps Second Reading conditional scaffolding and grouped response without unresolved full prayer", async () => {
+    expect(stepFor("second-reading").optional).toBe(true);
+    expect(resolveSecondReadingPresence({ massDayKind: "sunday" })).toBe("present");
+    expect(resolveSecondReadingPresence({ massDayKind: "weekday" })).toBe("omitted");
+
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "second-reading"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Listen to the second reading.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The word of the Lord.")).toBeTruthy();
+    expect(screen.getByText("Thanks be to God.")).toBeTruthy();
+    expect(textOrder("The word of the Lord.", "Thanks be to God.")).toBeLessThan(0);
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 

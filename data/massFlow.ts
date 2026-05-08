@@ -57,6 +57,16 @@ export type MassFlowBranch = {
 export type MassFlowResolverContext = {
   season?: LiturgicalSeason;
   massDayKind?: "sunday" | "holy_day" | "solemnity" | "weekday";
+  firstReadingKey?: string;
+  firstReadingText?: string;
+  psalmResponseKey?: string;
+  psalmResponseText?: string;
+  psalmVersesKey?: string;
+  psalmVersesText?: string;
+  secondReadingKey?: string;
+  secondReadingText?: string;
+  secondReadingPresence?: "present" | "omitted";
+  hasSecondReading?: boolean;
   penitentialAct?: "confiteor" | "dialogue" | "tropes";
   useSprinklingRite?: boolean;
   gloria?: "prescribed" | "omitted";
@@ -71,10 +81,12 @@ export type MassFlowResolverContext = {
 export type ResolvedMassFlowConfiguration = {
   branchIds: string[];
   branches: MassFlowBranch[];
+  hasSecondReading: boolean;
 };
 
 export type ResolvedPenitentialActForm = "confiteor" | "dialogue" | "tropes" | "sprinkling";
 export type ResolvedGloriaStatus = "prescribed" | "omitted";
+export type ResolvedSecondReadingPresence = "present" | "omitted";
 
 function textBlock(id: string, role: MassTextBlock["role"], text: string, source = reviewSource): MassTextBlock {
   return { id, role, text, source };
@@ -378,7 +390,7 @@ const sectionInputs: SectionInput[] = [
           guidedItem("first-reading-sit", "you_do", "Sit for the First Reading.", {
             posture: "sit"
           }),
-          guidedItem("first-reading-listen", "listen", "A reading from Sacred Scripture is proclaimed.", {
+          guidedItem("first-reading-listen", "listen", "Listen to the reading.", {
             posture: "sit"
           }),
           guidedItem("first-reading-ending", "listen", "The word of the Lord.", {
@@ -412,7 +424,7 @@ const sectionInputs: SectionInput[] = [
           guidedItem("psalm-verses", "listen", "Listen to the psalm verses.", {
             posture: "sit"
           }),
-          guidedItem("psalm-response-return", "you_say", "Repeat the response when it returns.", {
+          guidedItem("psalm-response-return", "you_say", "Join in the response.", {
             posture: "sit"
           })
         ],
@@ -428,7 +440,7 @@ const sectionInputs: SectionInput[] = [
         optional: true,
         textBlocks: [textBlock("second-reading-reader", "reader", "The second reading is proclaimed when appointed.")],
         guidedItems: [
-          guidedItem("second-reading-listen", "listen", "A second reading is proclaimed when appointed.", {
+          guidedItem("second-reading-listen", "listen", "Listen to the second reading.", {
             posture: "sit"
           }),
           guidedItem("second-reading-ending", "listen", "The word of the Lord.", {
@@ -1329,6 +1341,26 @@ export function resolveGloriaStatus(context: MassFlowResolverContext = {}): Reso
   return "prescribed";
 }
 
+export function resolveSecondReadingPresence(context: MassFlowResolverContext = {}): ResolvedSecondReadingPresence {
+  if (typeof context.hasSecondReading === "boolean") {
+    return context.hasSecondReading ? "present" : "omitted";
+  }
+
+  if (context.secondReadingPresence) {
+    return context.secondReadingPresence;
+  }
+
+  if (context.secondReadingKey || context.secondReadingText) {
+    return "present";
+  }
+
+  if (context.massDayKind === "weekday") {
+    return "omitted";
+  }
+
+  return "present";
+}
+
 export function resolveStandaloneKyrieBranchId(context: MassFlowResolverContext = {}) {
   return context.responseLanguage === "greek" || context.responseLanguage === "latin" ? "standalone-kyrie-greek-latin" : "standalone-kyrie-english";
 }
@@ -1354,7 +1386,8 @@ export function resolveMassFlowConfiguration(context: MassFlowResolverContext = 
 
   return {
     branchIds,
-    branches: branchIds.map((id) => getBranch(id)).filter((branch): branch is MassFlowBranch => Boolean(branch))
+    branches: branchIds.map((id) => getBranch(id)).filter((branch): branch is MassFlowBranch => Boolean(branch)),
+    hasSecondReading: resolveSecondReadingPresence(context) === "present"
   };
 }
 

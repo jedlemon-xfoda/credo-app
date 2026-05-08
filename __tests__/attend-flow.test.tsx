@@ -54,8 +54,7 @@ describe("Attend flow", () => {
       expect(screen.getAllByText("Dismissal").length).toBeGreaterThan(0);
     });
     expect(screen.getByText("Mass is ending")).toBeTruthy();
-    expect(screen.getByText("Continue to Reflection")).toBeTruthy();
-    fireEvent.press(screen.getByText("Continue to Reflection"));
+    fireEvent.press(screen.getByLabelText("Continue to Reflection"));
 
     await waitFor(() => {
       expect(router.replace).toHaveBeenCalledWith("/(tabs)/home/reflect");
@@ -82,50 +81,225 @@ describe("Attend flow", () => {
     await waitFor(() => {
       expect(screen.getAllByText("Gospel").length).toBeGreaterThan(0);
     });
-    fireEvent.press(screen.getByText("Restart"));
+    fireEvent.press(screen.getByLabelText("Open Attend guide"));
+    fireEvent.press(screen.getByText("Restart Mass"));
 
     await waitFor(() => {
-      expect(screen.getAllByText("Entrance").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Entrance Chant").length).toBeGreaterThan(0);
     });
     const stored = await AsyncStorage.getItem(storageKeys.dailyJourneyState);
     expect(stored).toContain('"attend":"in_progress"');
     expect(stored).toContain('"attendPosition":"entrance"');
   });
 
-  it("Attend mode switch only contains Guided and Quiet", async () => {
+  it("Attend live screen does not render the old mode switch", async () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Guided")).toBeTruthy();
+      expect(screen.getByText("Entrance Chant")).toBeTruthy();
     });
-    expect(screen.getByText("Quiet")).toBeTruthy();
+    expect(screen.queryByText("Guided")).toBeNull();
+    expect(screen.queryByText("Quiet")).toBeNull();
     expect(screen.queryByText("Learn")).toBeNull();
   });
 
-  it("Attend defaults to Quiet when profile experienceMode is quiet", async () => {
+  it("Attend live screen remains guided internally while profile experienceMode is quiet", async () => {
     await AsyncStorage.setItem(storageKeys.userMassProfile, JSON.stringify({ experienceMode: "quiet" }));
 
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("quiet mode")).toHaveAccessibilityState({ selected: true });
+      expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
     });
+    expect(screen.queryByLabelText("quiet mode")).toBeNull();
   });
 
-  it("Attend defaults to Guided when profile experienceMode is not_sure", async () => {
+  it("Attend live screen remains guided internally when profile experienceMode is not_sure", async () => {
     await AsyncStorage.setItem(storageKeys.userMassProfile, JSON.stringify({ experienceMode: "not_sure" }));
 
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("guided mode")).toHaveAccessibilityState({ selected: true });
+      expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
     });
+    expect(screen.queryByLabelText("guided mode")).toBeNull();
+  });
+
+  it("groups the Greeting listen and response on one guided screen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "greeting"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Make the Sign of the Cross")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+
+    await waitFor(() => {
+      expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    });
+    expect(screen.getByText("And with your spirit.")).toBeTruthy();
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+  });
+
+  it("groups the three Kyrie invocations on one guided screen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Penitential Act").length).toBeGreaterThan(0);
+    });
+
+    for (let count = 0; count < 6; count += 1) {
+      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    }
+
+    expect(screen.getAllByText("Lord, have mercy.").length).toBe(2);
+    expect(screen.getByText("Christ, have mercy.")).toBeTruthy();
+  });
+
+  it("groups Collect listen, description, and Amen on one guided screen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "collect"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Opening Prayer")).toBeTruthy();
+    });
+    expect(screen.getByText("The priest prays on behalf of the Church.")).toBeTruthy();
+    expect(screen.getByText("Bring your intention quietly.")).toBeTruthy();
+    expect(screen.getByText("Amen.")).toBeTruthy();
+  });
+
+  it("shows canonical Gospel dialogue, gesture, and ending responses", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "gospel"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    });
+    expect(screen.getByText("And with your spirit.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Make a small cross on your forehead, lips, and heart.")).toBeTruthy();
+    expect(screen.getByText("Glory to you, O Lord.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The Gospel of the Lord.")).toBeTruthy();
+    expect(screen.getByText("Praise to you, Lord Jesus Christ.")).toBeTruthy();
+  });
+
+  it("shows the Preface dialogue as guided response cadence", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "preface"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    });
+    expect(screen.getByText("And with your spirit.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Lift up your hearts.")).toBeTruthy();
+    expect(screen.getByText("We lift them up to the Lord.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Let us give thanks to the Lord our God.")).toBeTruthy();
+    expect(screen.getByText("It is right and just.")).toBeTruthy();
+  });
+
+  it("shows Communion invitation, response, and reception Amen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "communion"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Behold the Lamb of God.")).toBeTruthy();
+    });
+    expect(screen.getByText("Lord, I am not worthy that you should enter under my roof.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The Body of Christ.")).toBeTruthy();
+    expect(screen.getByText("Amen.")).toBeTruthy();
+  });
+
+  it("shows Dismissal response before completing Attend", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "dismissal"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Go in peace.")).toBeTruthy();
+    });
+    expect(screen.getByText("Thanks be to God.")).toBeTruthy();
+    expect(screen.getByText("Mass is ending")).toBeTruthy();
   });
 
   it("Attend Exit always routes Home", async () => {
     render(<AttendScreen />);
 
-    fireEvent.press(screen.getByText("Exit"));
+    fireEvent.press(screen.getByLabelText("Return Home"));
 
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/home");
     expect(router.replace).toHaveBeenCalledTimes(1);
@@ -149,9 +323,9 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Continue to Reflection")).toBeTruthy();
+      expect(screen.getByLabelText("Continue to Reflection")).toBeTruthy();
     });
-    fireEvent.press(screen.getByText("Continue to Reflection"));
+    fireEvent.press(screen.getByLabelText("Continue to Reflection"));
 
     await waitFor(() => {
       expect(router.replace).toHaveBeenCalledWith("/(tabs)/home/reflect");
@@ -162,9 +336,9 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Exit")).toBeTruthy();
+      expect(screen.getByLabelText("Return Home")).toBeTruthy();
     });
-    fireEvent.press(screen.getByText("Exit"));
+    fireEvent.press(screen.getByLabelText("Return Home"));
 
     await waitFor(async () => {
       const stored = await AsyncStorage.getItem(storageKeys.dailyJourneyState);
@@ -177,10 +351,10 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Exit")).toBeTruthy();
+      expect(screen.getByLabelText("Return Home")).toBeTruthy();
     });
     saveSpy.mockClear();
-    fireEvent.press(screen.getByText("Exit"));
+    fireEvent.press(screen.getByLabelText("Return Home"));
 
     expect(saveSpy).not.toHaveBeenCalled();
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/home");
@@ -193,10 +367,10 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Exit")).toBeTruthy();
+      expect(screen.getByLabelText("Return Home")).toBeTruthy();
     });
     positionSpy.mockClear();
-    fireEvent.press(screen.getByText("Exit"));
+    fireEvent.press(screen.getByLabelText("Return Home"));
 
     expect(positionSpy).not.toHaveBeenCalled();
     expect(router.replace).toHaveBeenCalledTimes(1);
@@ -208,7 +382,7 @@ describe("Attend flow", () => {
   it("Attend Exit does not route through root or onboarding", async () => {
     render(<AttendScreen />);
 
-    fireEvent.press(screen.getByText("Exit"));
+    fireEvent.press(screen.getByLabelText("Return Home"));
 
     expect(router.replace).toHaveBeenCalledWith("/(tabs)/home");
     expect(router.replace).not.toHaveBeenCalledWith("/");

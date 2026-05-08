@@ -33,6 +33,7 @@ export default function AttendScreen() {
   const [fullPrayerNotice, setFullPrayerNotice] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [variantOpen, setVariantOpen] = useState(false);
+  const [selectedGreetingText, setSelectedGreetingText] = useState("The Lord be with you.");
   const [selectedGreetingResponse, setSelectedGreetingResponse] = useState("And with your spirit.");
   const [selectedVariantValue, setSelectedVariantValue] = useState("And with your spirit.");
   const [selectedPenitentialBranchId, setSelectedPenitentialBranchId] = useState("penitential-confiteor");
@@ -203,6 +204,8 @@ export default function AttendScreen() {
     await setAttendPosition(massFlowSteps[0].id);
     setIndex(0);
     setGuidedIndex(0);
+    setSelectedGreetingText("The Lord be with you.");
+    setSelectedGreetingResponse("And with your spirit.");
     setSelectedPenitentialBranchId("penitential-confiteor");
     setSelectedStandaloneKyrieBranchId("standalone-kyrie-english");
     setFullPrayerNotice(false);
@@ -246,6 +249,7 @@ export default function AttendScreen() {
             onTap={tapToAdvance}
             page={guidedPage}
             paused={paused}
+            greetingTextOverride={selectedGreetingText}
             responseOverride={selectedGreetingResponse}
             step={effectiveStep}
             total={guidedPages.length}
@@ -341,7 +345,7 @@ export default function AttendScreen() {
               const value = option.responseText ?? option.label;
               setSelectedVariantValue(value);
               if (guidedPagePolicy?.variantGroup?.groupId === "greeting") {
-                setSelectedGreetingResponse(value);
+                setSelectedGreetingText(value);
               } else if (guidedPagePolicy?.variantGroup?.groupId === "penitential-act" && option.branchId) {
                 setSelectedPenitentialBranchId(option.branchId);
                 setSelectedVariantValue(option.branchId);
@@ -359,6 +363,7 @@ export default function AttendScreen() {
           <FullPrayerSheet
             item={guidedPage?.items.find((item) => item.fullPrayerKey) ?? guidedPage?.items[0]}
             onClose={() => setFullPrayerNotice(false)}
+            greetingTextOverride={selectedGreetingText}
             responseOverride={selectedGreetingResponse}
             step={effectiveStep}
           />
@@ -414,6 +419,19 @@ function buildGuidedPages(step: MassFlowStep): GuidedPage[] {
       pages.push({
         artItem: item,
         id: "greeting-response-group",
+        items: group
+      });
+      continue;
+    }
+
+    if (step.id === "greeting" && item.id === "greeting-sign-cross") {
+      const amen = items.find((candidate) => candidate.id === "greeting-amen");
+      const action = items.find((candidate) => candidate.id === "greeting-sign-cross-action");
+      const group = [item, action, amen].filter((candidate): candidate is MassGuidedItem => Boolean(candidate));
+      group.forEach((candidate) => consumed.add(candidate.id));
+      pages.push({
+        artItem: item,
+        id: "greeting-sign-cross-group",
         items: group
       });
       continue;
@@ -545,6 +563,7 @@ function GuidedMoment({
   onTap,
   page,
   paused,
+  greetingTextOverride,
   responseOverride,
   step,
   total,
@@ -560,6 +579,7 @@ function GuidedMoment({
   onTap: () => void;
   page: GuidedPage;
   paused: boolean;
+  greetingTextOverride: string;
   responseOverride: string;
   step: MassFlowStep;
   total: number;
@@ -604,7 +624,7 @@ function GuidedMoment({
         {shouldShowDivider(primaryItem, step) && page.items.length === 1 ? <SacredDivider /> : null}
         <View style={[styles.guidedBeatGroup, !artPresent && styles.guidedBeatGroupCompact]}>
           {page.items.map((item, itemIndex) => {
-            const displayText = item.id === "greeting-response" ? responseOverride : item.text;
+            const displayText = getGuidedDisplayText(item, greetingTextOverride, responseOverride);
             return (
               <View key={item.id} style={styles.guidedBeat}>
                 {itemIndex > 0 ? <SacredDivider style={styles.groupDivider} /> : null}
@@ -680,6 +700,18 @@ function ReferenceRow({ label, text, type }: { label: string; text: string; type
   );
 }
 
+function getGuidedDisplayText(item: MassGuidedItem, greetingTextOverride: string, responseOverride: string) {
+  if (item.id === "greeting-listen") {
+    return greetingTextOverride;
+  }
+
+  if (item.id === "greeting-response") {
+    return responseOverride;
+  }
+
+  return item.text;
+}
+
 function SeasonSwatch({ color, label }: { color: string; label: string }) {
   return (
     <View style={styles.seasonItem}>
@@ -727,6 +759,7 @@ function VariantOverlay({
 }
 
 function FullPrayerSheet({
+  greetingTextOverride,
   item,
   onClose,
   responseOverride,
@@ -734,10 +767,11 @@ function FullPrayerSheet({
 }: {
   item?: MassGuidedItem;
   onClose: () => void;
+  greetingTextOverride: string;
   responseOverride: string;
   step: MassFlowStep;
 }) {
-  const fullPrayer = getFullPrayerContent(step, item, responseOverride);
+  const fullPrayer = getFullPrayerContent(step, item, greetingTextOverride, responseOverride);
 
   return (
     <AttendSheet>
@@ -825,6 +859,10 @@ function PostureIcon({ posture }: { posture?: MassFlowStep["posture"] | MassGuid
 }
 
 function MomentArt({ item, step }: { item: MassGuidedItem; step: MassFlowStep }) {
+  if (item.id === "greeting-sign-cross") {
+    return null;
+  }
+
   if (item.id.includes("sign-cross")) {
     return <GestureArt variant="sign" />;
   }
@@ -853,6 +891,7 @@ function MomentArt({ item, step }: { item: MassGuidedItem; step: MassFlowStep })
 }
 
 function hasArtForPage(item: MassGuidedItem, step: MassFlowStep): boolean {
+  if (item.id === "greeting-sign-cross") return false;
   if (item.id.includes("sign-cross")) return true;
   if (item.cadenceCue) return true;
   if (step.id === "entrance") return true;
@@ -1068,7 +1107,7 @@ function getPageDurationHint(page: GuidedPage) {
   return page.items.find((item) => item.durationHint)?.durationHint;
 }
 
-function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefined, responseOverride: string) {
+function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefined, greetingTextOverride: string, responseOverride: string) {
   const currentKey = item?.fullPrayerKey;
   const keyContent = currentKey ? MASS_CONTENT[currentKey] : undefined;
   const resolvedBlocks = step.textBlocks
@@ -1077,7 +1116,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
     .filter(Boolean);
 
   if (currentKey === "penitential_dialogue" || currentKey === "penitential_tropes") {
-    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, greetingTextOverride, responseOverride);
 
     if (groupedLines.length > 0) {
       return {
@@ -1088,7 +1127,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   }
 
   if (currentKey === "kyrie" && step.guidedItems?.some((guidedItem) => guidedItem.id.startsWith("branch-kyrie-"))) {
-    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, greetingTextOverride, responseOverride);
 
     if (groupedLines.length > 0) {
       return {
@@ -1096,6 +1135,13 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
         lines: groupedLines
       };
     }
+  }
+
+  if (step.id === "greeting" && currentKey === "response_and_with_your_spirit") {
+    return {
+      title: step.title,
+      lines: ["Celebrant:", greetingTextOverride, "People:", responseOverride]
+    };
   }
 
   if (keyContent) {
@@ -1106,7 +1152,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   }
 
   if (currentKey && step.guidedItems) {
-    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, greetingTextOverride, responseOverride);
 
     if (groupedLines.length > 0) {
       return {
@@ -1126,7 +1172,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   if (step.guidedItems && step.guidedItems.length > 0) {
     return {
       title: step.title,
-      lines: step.guidedItems.map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text))
+      lines: step.guidedItems.map((guidedItem) => getGuidedDisplayText(guidedItem, greetingTextOverride, responseOverride))
     };
   }
 
@@ -1136,7 +1182,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   };
 }
 
-function getGuidedFullPrayerLines(step: MassFlowStep, currentKey: string, responseOverride: string) {
+function getGuidedFullPrayerLines(step: MassFlowStep, currentKey: string, greetingTextOverride: string, responseOverride: string) {
   if (currentKey === "penitential_dialogue") {
     const lines = getCallAndResponseFullPrayerLines(step, [
       ["branch-dialogue-have-mercy", "branch-dialogue-sinned"],
@@ -1161,7 +1207,7 @@ function getGuidedFullPrayerLines(step: MassFlowStep, currentKey: string, respon
   return (
     step.guidedItems
       ?.filter((guidedItem) => guidedItem.fullPrayerKey === currentKey)
-      .map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text))
+      .map((guidedItem) => getGuidedDisplayText(guidedItem, greetingTextOverride, responseOverride))
       .filter(Boolean) ?? []
   );
 }

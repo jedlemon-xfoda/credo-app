@@ -6,6 +6,7 @@ import { storageKeys } from "../constants/storage";
 import { getAmbientPolicy, getGestureForPage, getVariantRuleForPage, shouldShowFullPrayerAction } from "../data/attendRuntimePolicies";
 import {
   eucharisticPrayerSharedCadence,
+  getEntranceListenText,
   massFlowBranchGroups,
   massFlowSteps,
   massResponseLanguageOptions,
@@ -298,6 +299,7 @@ describe("Attend flow", () => {
     expect(shouldShowFullPrayerAction(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lords-prayer"), pageFor("lords-prayer", ["lords-prayer-all"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lamb-of-god"), pageFor("lamb-of-god", ["lamb-first"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))).toBe(true);
 
     expect(shouldShowFullPrayerAction(stepFor("first-reading"), pageFor("first-reading", ["first-reading-sit"]))).toBe(false);
     expect(shouldShowFullPrayerAction(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe(false);
@@ -307,6 +309,10 @@ describe("Attend flow", () => {
 
   it("marks variant eligibility only at branch decision screens", () => {
     expect(getVariantRuleForPage(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))?.groupId).toBe("greeting");
+    expect(getVariantRuleForPage(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))?.title).toBe("Which greeting are you hearing?");
+    expect(getVariantRuleForPage(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))?.options.map((option) => option.label)).toEqual(
+      expect.arrayContaining(["The Lord be with you.", "The grace of our Lord Jesus Christ...", "Grace to you and peace from God our Father..."])
+    );
     expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-silence"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.options.map((option) => option.branchId)).toEqual(
@@ -388,6 +394,19 @@ describe("Attend flow", () => {
       "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life."
     );
     expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "kyrie-lord-1-listen")?.durationHint).toBe("The Kyrie may be sung or spoken.");
+  });
+
+  it("supports Entrance chant, hymn, song, and antiphon wording without variant or full-prayer actions", () => {
+    expect(getEntranceListenText("chant")).toBe("Entrance chant begins");
+    expect(getEntranceListenText("hymn")).toBe("Entrance hymn begins");
+    expect(getEntranceListenText("song")).toBe("Entrance song begins");
+    expect(getEntranceListenText("antiphon")).toBe("Entrance antiphon is proclaimed or sung.");
+    expect(getVariantRuleForPage(stepFor("entrance"), pageFor("entrance", ["entrance-listen"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBeUndefined();
+    expect(shouldShowFullPrayerAction(stepFor("entrance"), pageFor("entrance", ["entrance-listen"]))).toBe(false);
+    expect(shouldShowFullPrayerAction(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe(false);
+    expect(stepFor("entrance").posture).toBe("stand");
+    expect(stepFor("entrance").guidedItems?.every((item) => item.posture === "stand")).toBe(true);
   });
 
   it("resumes persisted attendPosition", async () => {
@@ -522,9 +541,14 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Make the Sign of the Cross")).toBeTruthy();
+      expect(screen.getByText("In the name of the Father, and of the Son, and of the Holy Spirit.")).toBeTruthy();
     });
-    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Amen.")).toBeTruthy();
+    expect(screen.getByText("Make the Sign of the Cross.")).toBeTruthy();
+    expect(
+      textOrder("In the name of the Father, and of the Son, and of the Holy Spirit.", "Make the Sign of the Cross.")
+    ).toBeLessThan(0);
+    expect(textOrder("Make the Sign of the Cross.", "Amen.")).toBeLessThan(0);
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
 
     await waitFor(() => {
@@ -532,6 +556,81 @@ describe("Attend flow", () => {
     });
     expect(screen.getByText("And with your spirit.")).toBeTruthy();
     expect(screen.getByText("Hearing something different?")).toBeTruthy();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
+  });
+
+  it("keeps Entrance processional without variant or full-prayer overlays", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "entrance"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
+    });
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The priest and ministers process to the altar.")).toBeTruthy();
+    expect(screen.getByText("Let the procession gather your attention. Join the opening hymn if familiar, or listen as the Church gathers.")).toBeTruthy();
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
+  it("switches Greeting variants and updates full-prayer speaker labels", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "greeting"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("In the name of the Father, and of the Son, and of the Holy Spirit.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    expect(screen.getByText("And with your spirit.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getByText("Celebrant:")).toBeTruthy();
+    expect(screen.getByText("People:")).toBeTruthy();
+    expect(screen.getAllByText("The Lord be with you.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("And with your spirit.").length).toBeGreaterThanOrEqual(2);
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which greeting are you hearing?")).toBeTruthy();
+    expect(screen.getByText("The grace of our Lord Jesus Christ...")).toBeTruthy();
+    expect(screen.getByText("Grace to you and peace from God our Father...")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Select The grace of our Lord Jesus Christ..."));
+    expect(screen.queryByText("Which greeting are you hearing?")).toBeNull();
+    expect(screen.getByText("The grace of our Lord Jesus Christ, and the love of God, and the communion of the Holy Spirit be with you all.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getByText("Celebrant:")).toBeTruthy();
+    expect(screen.getAllByText("The grace of our Lord Jesus Christ, and the love of God, and the communion of the Holy Spirit be with you all.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("People:")).toBeTruthy();
+    expect(screen.getAllByText("And with your spirit.").length).toBeGreaterThanOrEqual(2);
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which greeting are you hearing?")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance Attend moment"));
+    expect(screen.queryByText("Which greeting are you hearing?")).toBeNull();
+    expect(screen.queryByText("The grace of our Lord Jesus Christ...")).toBeNull();
   });
 
   it("shows View full prayer in runtime only on appropriate guided pages", async () => {
@@ -595,15 +694,14 @@ describe("Attend flow", () => {
     const greetingRender = render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Make the Sign of the Cross")).toBeTruthy();
+      expect(screen.getByText("In the name of the Father, and of the Son, and of the Holy Spirit.")).toBeTruthy();
     });
-    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("The Lord be with you.")).toBeTruthy();
 
     fireEvent.press(screen.getByLabelText("Hearing something different"));
-    expect(screen.getByText("Which response are you hearing?")).toBeTruthy();
-    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    expect(screen.getByText("Which greeting are you hearing?")).toBeTruthy();
+    expect(screen.getAllByText("The Lord be with you.").length).toBeGreaterThanOrEqual(2);
     fireEvent.press(screen.getByLabelText("Close response options"));
     expect(screen.getByText("The Lord be with you.")).toBeTruthy();
 

@@ -2,11 +2,125 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import AttendScreen from "../app/(tabs)/home/attend";
 import { storageKeys } from "../constants/storage";
+import { massFlowSteps } from "../data/massFlow";
+import { MASS_CONTENT } from "../services/massContent";
 import { createDefaultJourneyState, getLocalDateKey } from "../services/journeyState";
 import * as journeyStateService from "../services/journeyState";
 import { router } from "../jest.setup";
 
+const p0StepIds = [
+  "first-reading",
+  "psalm",
+  "second-reading",
+  "gospel-acclamation",
+  "gospel",
+  "homily",
+  "profession-of-faith",
+  "universal-prayer",
+  "presentation",
+  "prayer-over-offerings",
+  "preface",
+  "holy",
+  "consecration",
+  "mystery-of-faith",
+  "doxology",
+  "lords-prayer",
+  "sign-of-peace",
+  "lamb-of-god",
+  "communion",
+  "prayer-after-communion",
+  "announcements",
+  "blessing",
+  "dismissal"
+];
+
+function guidedIdsFor(stepId: string) {
+  return massFlowSteps.find((step) => step.id === stepId)?.guidedItems?.map((item) => item.id) ?? [];
+}
+
 describe("Attend flow", () => {
+  it("P0 MassFlow steps from First Reading through Dismissal have guided moments", () => {
+    for (const stepId of p0StepIds) {
+      expect(guidedIdsFor(stepId).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("P0 guided moments have unique IDs and resolvable full prayer keys", () => {
+    const guidedItems = massFlowSteps.flatMap((step) => step.guidedItems ?? []);
+    const guidedIds = guidedItems.map((item) => item.id);
+    expect(new Set(guidedIds).size).toBe(guidedIds.length);
+
+    const missingKeys = guidedItems
+      .map((item) => item.fullPrayerKey)
+      .filter((key): key is string => Boolean(key))
+      .filter((key) => !MASS_CONTENT[key]);
+
+    expect(missingKeys).toEqual([]);
+  });
+
+  it("P0 required response moments are present", () => {
+    const requiredResponseIds = [
+      "first-reading-response",
+      "second-reading-response",
+      "gospel-dialogue-response",
+      "gospel-announcement-response",
+      "gospel-ending-response",
+      "universal-prayer-response",
+      "presentation-bread-response",
+      "presentation-wine-response",
+      "offerings-response",
+      "offerings-amen",
+      "preface-lord-response",
+      "preface-hearts-response",
+      "preface-thanks-response",
+      "mystery-response",
+      "doxology-amen",
+      "lords-prayer-kingdom",
+      "peace-amen",
+      "peace-dialogue-response",
+      "communion-worthy-response",
+      "communion-amen",
+      "post-communion-amen",
+      "blessing-dialogue-response",
+      "blessing-amen",
+      "dismissal-response"
+    ];
+    const guidedIds = new Set(massFlowSteps.flatMap((step) => step.guidedItems?.map((item) => item.id) ?? []));
+
+    expect(requiredResponseIds.filter((id) => !guidedIds.has(id))).toEqual([]);
+  });
+
+  it("P0 cadence pairs are sequenced prompt before response", () => {
+    const expectedCadences: Record<string, string[]> = {
+      "first-reading": ["first-reading-ending", "first-reading-response"],
+      "second-reading": ["second-reading-ending", "second-reading-response"],
+      gospel: ["gospel-dialogue-listen", "gospel-dialogue-response", "gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response", "gospel-ending-listen", "gospel-ending-response"],
+      presentation: ["presentation-bread-prayer", "presentation-bread-response", "presentation-wine-prayer", "presentation-wine-response"],
+      "prayer-over-offerings": ["offerings-invitation", "offerings-response", "offerings-prayer", "offerings-amen"],
+      preface: ["preface-lord-listen", "preface-lord-response", "preface-hearts-listen", "preface-hearts-response", "preface-thanks-listen", "preface-thanks-response"],
+      "mystery-of-faith": ["mystery-listen", "mystery-response"],
+      doxology: ["doxology-listen", "doxology-amen"],
+      "lords-prayer": ["lords-prayer-embolism", "lords-prayer-kingdom"],
+      "sign-of-peace": ["peace-prayer", "peace-amen", "peace-dialogue-listen", "peace-dialogue-response"],
+      communion: ["communion-invitation", "communion-worthy-response", "communion-minister", "communion-amen"],
+      "prayer-after-communion": ["post-communion-prayer", "post-communion-amen"],
+      blessing: ["blessing-dialogue-listen", "blessing-dialogue-response", "blessing-cross", "blessing-amen"],
+      dismissal: ["dismissal-listen", "dismissal-response"]
+    };
+
+    for (const [stepId, expectedIds] of Object.entries(expectedCadences)) {
+      const ids = guidedIdsFor(stepId);
+      const indexes = expectedIds.map((id) => ids.indexOf(id));
+      expect(indexes.every((index) => index >= 0)).toBe(true);
+      expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
+    }
+  });
+
+  it("Communion Rite and Dismissal are not incorrectly marked optional", () => {
+    expect(massFlowSteps.find((step) => step.id === "communion")?.optional).toBeUndefined();
+    expect(massFlowSteps.find((step) => step.id === "dismissal")?.optional).toBeUndefined();
+  });
+
   it("resumes persisted attendPosition", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,

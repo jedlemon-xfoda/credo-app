@@ -709,7 +709,6 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Communion",
         summary: "The Lord gives Himself to His Church.",
         posture: "process",
-        optional: true,
         textBlocks: [
           textBlock("communion-you", "you", "Amen.")
         ],
@@ -827,10 +826,6 @@ const sectionInputs: SectionInput[] = [
           guidedItem("dismissal-response", "you_say", "Thanks be to God.", {
             posture: "stand",
             fullPrayerKey: "response_thanks_be_to_god"
-          }),
-          guidedItem("dismissal-ambient", "ambient", "The ministers reverence the altar and depart.", {
-            posture: "stand",
-            durationHint: "Carry the Mass into the week."
           })
         ],
         guidance: "Go in peace. Carry Sunday into the week.",

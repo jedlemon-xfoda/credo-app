@@ -10,6 +10,7 @@ import {
   massFlowBranchGroups,
   massFlowSteps,
   massResponseLanguageOptions,
+  resolveGloriaStatus,
   resolveMassFlowConfiguration,
   resolvePenitentialActForm,
   shouldIncludeStandaloneKyrie
@@ -245,6 +246,18 @@ describe("Attend flow", () => {
     expect(solemnBlessing?.fullPrayerKeys).toContain("solemn_blessing");
   });
 
+  it("defines Gloria prescribed and omitted branch scaffolding", () => {
+    const prescribed = massFlowBranchGroups.find((branch) => branch.id === "gloria-prescribed");
+    const omitted = massFlowBranchGroups.find((branch) => branch.id === "gloria-omitted");
+
+    expect(prescribed?.kind).toBe("gloria");
+    expect(prescribed?.replacesStepId).toBe("glory-to-god");
+    expect(prescribed?.fullPrayerKeys).toContain("gloria");
+    expect(omitted?.kind).toBe("gloria");
+    expect(omitted?.replacesStepId).toBe("glory-to-god");
+    expect(omitted?.fullPrayerKeys).toEqual([]);
+  });
+
   it("resolves date-aware branch defaults without a hardcoded calendar engine", () => {
     expect(resolveMassFlowConfiguration().branchIds).toEqual(
       expect.arrayContaining(["penitential-confiteor", "eucharistic-prayer-ii", "gospel-acclamation-ordinary", "creed-nicene", "dismissal-ordinary", "blessing-simple"])
@@ -256,6 +269,9 @@ describe("Attend flow", () => {
     expect(resolveMassFlowConfiguration({ eucharisticPrayer: "ep-iv", creed: "apostles", blessing: "solemn" }).branchIds).toEqual(
       expect.arrayContaining(["eucharistic-prayer-iv", "creed-apostles", "blessing-solemn"])
     );
+    expect(resolveMassFlowConfiguration({ massDayKind: "sunday" }).branchIds).toContain("gloria-prescribed");
+    expect(resolveMassFlowConfiguration({ massDayKind: "weekday" }).branchIds).toContain("gloria-omitted");
+    expect(resolveGloriaStatus({ massDayKind: "weekday" })).toBe("omitted");
   });
 
   it("supports Latin and Greek response scaffolding in the data layer", () => {
@@ -295,7 +311,7 @@ describe("Attend flow", () => {
 
   it("shows full-prayer actions only for substantial prayer pages", () => {
     expect(shouldShowFullPrayerAction(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))).toBe(true);
-    expect(shouldShowFullPrayerAction(stepFor("glory-to-god"), pageFor("glory-to-god", ["gloria-you-say"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("glory-to-god"), pageFor("glory-to-god", ["gloria-opening"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lords-prayer"), pageFor("lords-prayer", ["lords-prayer-all"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lamb-of-god"), pageFor("lamb-of-god", ["lamb-first"]))).toBe(true);
@@ -977,7 +993,84 @@ describe("Attend flow", () => {
     expect(screen.queryByText("Hearing something different?")).toBeNull();
   });
 
-  it("groups Collect listen, description, and Amen on one guided screen", async () => {
+  it("resets to the first Gloria page when entering the Gloria step", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    fireEvent.press(screen.getByLabelText("Select You were sent to heal the contrite of heart..."));
+
+    for (let count = 0; count < 4; count += 1) {
+      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    }
+
+    await waitFor(() => {
+      expect(screen.getByText("Glory to God in the highest,\nand on earth peace to people of good will.")).toBeTruthy();
+    });
+    expect(screen.queryByText("Lord Jesus Christ, Only Begotten Son,\nLord God, Lamb of God, Son of the Father,")).toBeNull();
+  });
+
+  it("shows the complete Gloria full prayer including the final Amen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "glory-to-god"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Glory to God in the highest,\nand on earth peace to people of good will.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+
+    expect(screen.getAllByText("Glory to God in the highest,").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("you are seated at the right hand of the Father,")).toBeTruthy();
+    expect(screen.getByText("with the Holy Spirit,")).toBeTruthy();
+    expect(screen.getAllByText("Amen.").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("keeps Gloria guided pages within safe density limits", () => {
+    const gloria = stepFor("glory-to-god");
+    const gloriaItems = gloria.guidedItems?.filter((item) => item.id.startsWith("gloria-")) ?? [];
+
+    expect(gloriaItems.length).toBeGreaterThan(8);
+    for (const item of gloriaItems) {
+      expect(item.text.split("\n").length).toBeLessThanOrEqual(4);
+      expect(item.text.length).toBeLessThanOrEqual(140);
+    }
+    expect(gloriaItems.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["gloria-take-away-mercy", "gloria-take-away-prayer", "gloria-seated-mercy", "gloria-amen"])
+    );
+  });
+
+  it("keeps omitted Gloria scaffolding from exposing the full hymn", () => {
+    const gloria = stepFor("glory-to-god");
+    const omitted = massFlowBranchGroups.find((branch) => branch.id === "gloria-omitted");
+
+    expect(omitted).toBeTruthy();
+    expect(shouldShowFullPrayerAction({ ...gloria, guidedItems: omitted?.guidedItems ?? [] }, { id: "gloria-omitted-page", items: omitted?.guidedItems ?? [] })).toBe(false);
+  });
+
+  it("splits Collect into invitation, silent prayer, Collect, and Amen without unresolved full prayer", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -991,11 +1084,17 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("Opening Prayer")).toBeTruthy();
+      expect(screen.getByText("Let us pray.")).toBeTruthy();
     });
-    expect(screen.getByText("The priest prays on behalf of the Church.")).toBeTruthy();
-    expect(screen.getByText("Bring your intention quietly.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Pray silently.")).toBeTruthy();
+    expect(screen.getByText("AMBIENT")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The priest prays the Collect.")).toBeTruthy();
     expect(screen.getByText("Amen.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
   it("shows canonical Gospel dialogue, gesture, and ending responses", async () => {

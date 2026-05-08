@@ -125,6 +125,8 @@ export default function AttendScreen() {
       return;
     }
     suppressPositionPersist.current = false;
+    setFullPrayerNotice(false);
+    setGuidedIndex(0);
     setIndex((current) => {
       const nextIndex = Math.max(0, current - 1);
       setAttendPosition(massFlowSteps[nextIndex].id);
@@ -159,6 +161,8 @@ export default function AttendScreen() {
     }
 
     suppressPositionPersist.current = false;
+    setFullPrayerNotice(false);
+    setGuidedIndex(0);
     setIndex((current) => {
       const nextIndex = Math.min(massFlowSteps.length - 1, current + 1);
       setAttendPosition(massFlowSteps[nextIndex].id);
@@ -450,14 +454,12 @@ function buildGuidedPages(step: MassFlowStep): GuidedPage[] {
       continue;
     }
 
-    if (step.id === "collect" && item.id === "collect-listen") {
+    if (step.id === "collect" && item.id === "collect-prayer") {
       const amen = items.find((candidate) => candidate.id === "collect-amen");
-      const intention = items.find((candidate) => candidate.id === "collect-intention");
-      const group = [item, intention, amen].filter((candidate): candidate is MassGuidedItem => Boolean(candidate));
+      const group = [item, amen].filter((candidate): candidate is MassGuidedItem => Boolean(candidate));
       group.forEach((candidate) => consumed.add(candidate.id));
       pages.push({
         artItem: item,
-        description: "The priest prays on behalf of the Church.",
         id: "collect-group",
         items: group
       });
@@ -1083,7 +1085,7 @@ function getGuidanceTypeStyle(type: MassGuidedItem["guidanceType"]) {
 
 function shouldShowDivider(item: MassGuidedItem, step: MassFlowStep) {
   return (
-    step.id === "collect" ||
+    (step.id === "collect" && item.id !== "collect-silence") ||
     item.id === "greeting-listen" ||
     item.id === "greeting-amen" ||
     item.id === "penitential-intro" ||

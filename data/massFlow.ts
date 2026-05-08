@@ -30,6 +30,7 @@ export type MassFlowBranchKind =
   | "penitential_act"
   | "sprinkling_rite"
   | "standalone_kyrie"
+  | "gloria"
   | "eucharistic_prayer"
   | "gospel_acclamation"
   | "creed"
@@ -39,6 +40,7 @@ export type MassFlowBranchKind =
 export type LiturgicalSeason = "advent" | "christmas" | "lent" | "easter" | "ordinary";
 
 export type ResponseLanguage = "english" | "latin" | "greek";
+export type EntranceForm = "chant" | "hymn" | "song" | "antiphon";
 
 export type MassFlowBranch = {
   id: string;
@@ -57,6 +59,7 @@ export type MassFlowResolverContext = {
   massDayKind?: "sunday" | "holy_day" | "solemnity" | "weekday";
   penitentialAct?: "confiteor" | "dialogue" | "tropes";
   useSprinklingRite?: boolean;
+  gloria?: "prescribed" | "omitted";
   eucharisticPrayer?: "ep-i" | "ep-ii" | "ep-iii" | "ep-iv";
   gospelAcclamation?: "ordinary" | "lent";
   creed?: "nicene" | "apostles";
@@ -71,6 +74,7 @@ export type ResolvedMassFlowConfiguration = {
 };
 
 export type ResolvedPenitentialActForm = "confiteor" | "dialogue" | "tropes" | "sprinkling";
+export type ResolvedGloriaStatus = "prescribed" | "omitted";
 
 function textBlock(id: string, role: MassTextBlock["role"], text: string, source = reviewSource): MassTextBlock {
   return { id, role, text, source };
@@ -102,6 +106,31 @@ function branchItem(
   return guidedItem(id, guidanceType, text, options);
 }
 
+export function getEntranceListenText(form: EntranceForm = "hymn") {
+  switch (form) {
+    case "chant":
+      return "Entrance chant begins";
+    case "song":
+      return "Entrance song begins";
+    case "antiphon":
+      return "Entrance antiphon is proclaimed or sung.";
+    case "hymn":
+      return "Entrance hymn begins";
+  }
+}
+
+function entranceGuidedItems(form: EntranceForm = "hymn") {
+  return [
+    guidedItem("entrance-listen", "listen", getEntranceListenText(form), {
+      posture: "stand"
+    }),
+    guidedItem("entrance-ambient", "ambient", "The priest and ministers process to the altar.", {
+      posture: "stand",
+      durationHint: "Let the procession gather your attention. Join the opening hymn if familiar, or listen as the Church gathers."
+    })
+  ];
+}
+
 const sectionInputs: SectionInput[] = [
   {
     id: "introductory-rites",
@@ -116,17 +145,9 @@ const sectionInputs: SectionInput[] = [
         posture: "stand",
         optional: true,
         textBlocks: [],
-        guidedItems: [
-          guidedItem("entrance-listen", "listen", "Entrance hymn begins", {
-            posture: "stand",
-            durationHint: "Let the procession gather your attention."
-          }),
-          guidedItem("entrance-ambient", "ambient", "The priest and ministers process to the altar.", {
-            posture: "stand"
-          })
-        ],
-        guidance: "Entrance chant or antiphon begins the Mass. Some parishes sing a hymn instead.",
-        listenAnchors: anchors("In the name of the Father", "Entrance chant")
+        guidedItems: entranceGuidedItems("hymn"),
+        guidance: "Entrance chant, hymn, song, or antiphon begins the Mass.",
+        listenAnchors: anchors("In the name of the Father", "Entrance chant", "Entrance hymn", "Entrance song", "Entrance antiphon")
       },
       {
         id: "greeting",
@@ -139,12 +160,15 @@ const sectionInputs: SectionInput[] = [
     ...textBlock("greeting-celebrant", "celebrant", "Fallback greeting"),
     contentKey: "greeting",
   }
-],
+        ],
         guidedItems: [
-          guidedItem("greeting-sign-cross", "you_do", "Make the Sign of the Cross", {
+          guidedItem("greeting-sign-cross", "listen", "In the name of the Father, and of the Son, and of the Holy Spirit.", {
             posture: "stand"
           }),
           guidedItem("greeting-amen", "you_say", "Amen.", {
+            posture: "stand"
+          }),
+          guidedItem("greeting-sign-cross-action", "you_do", "Make the Sign of the Cross.", {
             posture: "stand"
           }),
           guidedItem("greeting-listen", "listen", "The Lord be with you.", {
@@ -264,18 +288,52 @@ const sectionInputs: SectionInput[] = [
         posture: "stand",
         textBlocks: [],
         guidedItems: [
-          guidedItem("gloria-you-say", "you_say", "Glory to God in the highest,", {
+          guidedItem("gloria-opening", "you_say", "Glory to God in the highest,\nand on earth peace to people of good will.", {
             posture: "stand",
             fullPrayerKey: "gloria"
           }),
-          guidedItem("gloria-listen-omitted", "listen", "The Gloria may be omitted today.", {
-            posture: "stand"
+          guidedItem("gloria-praise", "you_say", "We praise you,\nwe bless you,\nwe adore you,\nwe glorify you,", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
           }),
-          guidedItem("gloria-ambient", "ambient", "Praise follows mercy.", {
-            posture: "stand"
+          guidedItem("gloria-thanks", "you_say", "we give you thanks for your great glory,", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-father", "you_say", "Lord God, heavenly King,\nO God, almighty Father.", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-son", "you_say", "Lord Jesus Christ, Only Begotten Son,\nLord God, Lamb of God, Son of the Father,", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-take-away-mercy", "you_say", "you take away the sins of the world,\nhave mercy on us;", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-take-away-prayer", "you_say", "you take away the sins of the world,\nreceive our prayer;", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-seated-mercy", "you_say", "you are seated at the right hand of the Father,\nhave mercy on us.", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-final-praise", "you_say", "For you alone are the Holy One,\nyou alone are the Lord,\nyou alone are the Most High,", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-conclusion", "you_say", "Jesus Christ,\nwith the Holy Spirit,\nin the glory of God the Father.", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
+          }),
+          guidedItem("gloria-amen", "you_say", "Amen.", {
+            posture: "stand",
+            fullPrayerKey: "gloria"
           })
         ],
-        guidance: "The Gloria is sung or said when appointed. Praise follows mercy.",
+        guidance: "The Gloria is sung or spoken when appointed. Praise follows mercy.",
         listenAnchors: anchors("Glory to God in the highest")
       },
       {
@@ -286,10 +344,13 @@ const sectionInputs: SectionInput[] = [
         posture: "stand",
         textBlocks: [textBlock("collect-celebrant", "celebrant", "The celebrant prays the Collect.")],
         guidedItems: [
-          guidedItem("collect-listen", "listen", "Opening Prayer", {
+          guidedItem("collect-listen", "listen", "Let us pray.", {
             posture: "stand"
           }),
-          guidedItem("collect-intention", "you_do", "Bring your intention quietly.", {
+          guidedItem("collect-silence", "ambient", "Pray silently.", {
+            posture: "stand"
+          }),
+          guidedItem("collect-prayer", "listen", "The priest prays the Collect.", {
             posture: "stand"
           }),
           guidedItem("collect-amen", "you_say", "Amen.", {
@@ -1054,6 +1115,24 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     fullPrayerKeys: ["sprinkling_rite", "response_amen"]
   },
   {
+    id: "gloria-prescribed",
+    kind: "gloria",
+    title: "Gloria: Prescribed",
+    replacesStepId: "glory-to-god",
+    guidedItems: [
+      branchItem("branch-gloria-prescribed-opening", "you_say", "Glory to God in the highest,\nand on earth peace to people of good will.", { posture: "stand", fullPrayerKey: "gloria" })
+    ],
+    fullPrayerKeys: ["gloria"]
+  },
+  {
+    id: "gloria-omitted",
+    kind: "gloria",
+    title: "Gloria: Omitted",
+    replacesStepId: "glory-to-god",
+    guidedItems: [branchItem("branch-gloria-omitted-listen", "listen", "The Gloria is omitted today.", { posture: "stand" })],
+    fullPrayerKeys: []
+  },
+  {
     id: "standalone-kyrie-english",
     kind: "standalone_kyrie",
     title: "Standalone Kyrie: English",
@@ -1238,6 +1317,18 @@ export function shouldIncludeStandaloneKyrie(form: ResolvedPenitentialActForm): 
   return form === "confiteor" || form === "dialogue";
 }
 
+export function resolveGloriaStatus(context: MassFlowResolverContext = {}): ResolvedGloriaStatus {
+  if (context.gloria) {
+    return context.gloria;
+  }
+
+  if (context.massDayKind === "weekday") {
+    return "omitted";
+  }
+
+  return "prescribed";
+}
+
 export function resolveStandaloneKyrieBranchId(context: MassFlowResolverContext = {}) {
   return context.responseLanguage === "greek" || context.responseLanguage === "latin" ? "standalone-kyrie-greek-latin" : "standalone-kyrie-english";
 }
@@ -1253,6 +1344,7 @@ export function resolveMassFlowConfiguration(context: MassFlowResolverContext = 
   const branchIds = [
     penitentialId,
     shouldIncludeStandaloneKyrie(penitentialForm) ? resolveStandaloneKyrieBranchId(context) : undefined,
+    `gloria-${resolveGloriaStatus(context)}`,
     `eucharistic-prayer-${context.eucharisticPrayer?.replace("ep-", "") ?? "ii"}`,
     gospelAcclamationId,
     `creed-${context.creed ?? "nicene"}`,

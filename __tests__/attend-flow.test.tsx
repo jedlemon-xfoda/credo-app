@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
 import AttendScreen from "../app/(tabs)/home/attend";
 import { storageKeys } from "../constants/storage";
+import { getAmbientPolicy, getGestureForPage, getVariantRuleForPage, shouldShowFullPrayerAction } from "../data/attendRuntimePolicies";
 import { eucharisticPrayerSharedCadence, massFlowBranchGroups, massFlowSteps, massResponseLanguageOptions, resolveMassFlowConfiguration } from "../data/massFlow";
 import { MASS_CONTENT } from "../services/massContent";
 import { createDefaultJourneyState, getLocalDateKey } from "../services/journeyState";
@@ -36,6 +37,31 @@ const p0StepIds = [
 
 function guidedIdsFor(stepId: string) {
   return massFlowSteps.find((step) => step.id === stepId)?.guidedItems?.map((item) => item.id) ?? [];
+}
+
+function stepFor(stepId: string) {
+  const step = massFlowSteps.find((candidate) => candidate.id === stepId);
+  if (!step) {
+    throw new Error(`Missing MassFlow step ${stepId}`);
+  }
+  return step;
+}
+
+function pageFor(stepId: string, itemIds: string[]) {
+  const step = stepFor(stepId);
+  const items = itemIds.map((id) => {
+    const item = step.guidedItems?.find((candidate) => candidate.id === id);
+    if (!item) {
+      throw new Error(`Missing guided item ${id}`);
+    }
+    return item;
+  });
+
+  return {
+    artItem: items[0],
+    id: itemIds.join("-page"),
+    items
+  };
 }
 
 describe("Attend flow", () => {
@@ -220,6 +246,51 @@ describe("Attend flow", () => {
     expect(resolveMassFlowConfiguration({ responseLanguage: "greek" }).branchIds).toContain("penitential-tropes");
   });
 
+  it("shows full-prayer actions only for substantial prayer pages", () => {
+    expect(shouldShowFullPrayerAction(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("glory-to-god"), pageFor("glory-to-god", ["gloria-you-say"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("lords-prayer"), pageFor("lords-prayer", ["lords-prayer-all"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("lamb-of-god"), pageFor("lamb-of-god", ["lamb-first"]))).toBe(true);
+
+    expect(shouldShowFullPrayerAction(stepFor("first-reading"), pageFor("first-reading", ["first-reading-sit"]))).toBe(false);
+    expect(shouldShowFullPrayerAction(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe(false);
+    expect(shouldShowFullPrayerAction(stepFor("gospel"), pageFor("gospel", ["gospel-dialogue-response"]))).toBe(false);
+    expect(shouldShowFullPrayerAction(stepFor("dismissal"), pageFor("dismissal", ["dismissal-response"]))).toBe(false);
+  });
+
+  it("marks variant eligibility only at branch decision screens", () => {
+    expect(getVariantRuleForPage(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))?.groupId).toBe("greeting");
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))?.options.map((option) => option.branchId)).toEqual(
+      expect.arrayContaining(["penitential-confiteor", "penitential-dialogue", "penitential-tropes", "sprinkling-rite"])
+    );
+    expect(getVariantRuleForPage(stepFor("gospel-acclamation"), pageFor("gospel-acclamation", ["gospel-acclamation-alleluia"]))?.groupId).toBe("gospel-acclamation");
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))?.groupId).toBe("creed");
+    expect(getVariantRuleForPage(stepFor("preface"), pageFor("preface", ["preface-prayer"]))?.groupId).toBe("eucharistic-prayer");
+    expect(getVariantRuleForPage(stepFor("blessing"), pageFor("blessing", ["blessing-dialogue-listen", "blessing-dialogue-response"]))?.groupId).toBe("blessing");
+    expect(getVariantRuleForPage(stepFor("dismissal"), pageFor("dismissal", ["dismissal-listen", "dismissal-response"]))?.groupId).toBe("dismissal");
+
+    expect(getVariantRuleForPage(stepFor("gospel"), pageFor("gospel", ["gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("communion"), pageFor("communion", ["communion-minister", "communion-amen"]))).toBeUndefined();
+  });
+
+  it("provides gesture metadata for major gesture moments", () => {
+    expect(getGestureForPage(stepFor("greeting"), pageFor("greeting", ["greeting-sign-cross"]))?.kind).toBe("sign_of_cross");
+    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.kind).toBe("breast_strike");
+    expect(getGestureForPage(stepFor("gospel"), pageFor("gospel", ["gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response"]))?.kind).toBe("triple_gospel_cross");
+    expect(getGestureForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-incarnation-bow"]))?.kind).toBe("bow");
+    expect(getGestureForPage(stepFor("consecration"), pageFor("consecration", ["consecration-host-elevation"]))?.kind).toBe("elevation_host");
+    expect(getGestureForPage(stepFor("consecration"), pageFor("consecration", ["consecration-chalice-elevation"]))?.kind).toBe("elevation_chalice");
+    expect(getGestureForPage(stepFor("communion"), pageFor("communion", ["communion-process"]))?.kind).toBe("procession");
+  });
+
+  it("classifies ambient pages without suppressing required liturgical quiet moments", () => {
+    expect(getAmbientPolicy(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe("required");
+    expect(getAmbientPolicy(stepFor("consecration"), pageFor("consecration", ["consecration-host-elevation"]))).toBe("required");
+    expect(getAmbientPolicy(stepFor("communion"), pageFor("communion", ["communion-thanksgiving"]))).toBe("optional");
+    expect(getAmbientPolicy(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))).toBe("suppress_by_default");
+  });
+
   it("resumes persisted attendPosition", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
@@ -362,6 +433,105 @@ describe("Attend flow", () => {
     });
     expect(screen.getByText("And with your spirit.")).toBeTruthy();
     expect(screen.getByText("Hearing something different?")).toBeTruthy();
+  });
+
+  it("shows View full prayer in runtime only on appropriate guided pages", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "profession-of-faith"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Stand for the Profession of Faith.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("I believe in one God,")).toBeTruthy();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
+  });
+
+  it("hides View full prayer on posture-only and short response pages in runtime", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "first-reading"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Sit for the First Reading.")).toBeTruthy();
+    });
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Thanks be to God.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+  });
+
+  it("opens variant and full-prayer overlays without advancing the guided index", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "greeting"
+      })
+    );
+
+    const greetingRender = render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Make the Sign of the Cross")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which response are you hearing?")).toBeTruthy();
+    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Close response options"));
+    expect(screen.getByText("The Lord be with you.")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Previous guided Mass moment"));
+    expect(screen.getByText("Amen.")).toBeTruthy();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+
+    greetingRender.unmount();
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "profession-of-faith"
+      })
+    );
+
+    render(<AttendScreen />);
+    await waitFor(() => {
+      expect(screen.getByText("Stand for the Profession of Faith.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("I believe in one God,")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getByLabelText("Close full prayer")).toBeTruthy();
+    expect(screen.getAllByText("I believe in one God,").length).toBeGreaterThan(1);
   });
 
   it("groups the three Kyrie invocations on one guided screen", async () => {

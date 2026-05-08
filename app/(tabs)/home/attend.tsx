@@ -523,8 +523,8 @@ function GuidedMoment({
         <Text style={styles.guidedSection}>{step.sectionTitle}</Text>
       </View>
 
+      <Text style={[styles.guidedTitle, !artPresent && styles.guidedTitleCompact]}>{step.title}</Text>
       <View style={styles.guidedCenter}>
-        <Text style={[styles.guidedTitle, !artPresent && styles.guidedTitleCompact]}>{step.title}</Text>
         <MomentArt item={artItem} step={step} />
         {shouldShowDivider(primaryItem, step) && page.items.length === 1 ? <SacredDivider /> : null}
         <View style={[styles.guidedBeatGroup, !artPresent && styles.guidedBeatGroupCompact]}>
@@ -678,7 +678,6 @@ function FullPrayerSheet({
             {line}
           </Text>
         ))}
-        {fullPrayer.note ? <Text style={styles.fullPrayerNote}>{fullPrayer.note}</Text> : null}
       </ScrollView>
     </AttendSheet>
   );
@@ -1001,8 +1000,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   if (keyContent) {
     return {
       title: step.title,
-      lines: splitTextLines(keyContent),
-      note: "Review copy for private testing."
+      lines: splitTextLines(keyContent)
     };
   }
 
@@ -1015,8 +1013,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
     if (groupedLines.length > 0) {
       return {
         title: step.title,
-        lines: groupedLines,
-        note: "Shown from the current guided Mass text."
+        lines: groupedLines
       };
     }
   }
@@ -1024,23 +1021,20 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   if (resolvedBlocks.length > 0) {
     return {
       title: step.title,
-      lines: resolvedBlocks.flatMap(splitTextLines),
-      note: "Review copy for private testing."
+      lines: resolvedBlocks.flatMap(splitTextLines)
     };
   }
 
   if (step.guidedItems && step.guidedItems.length > 0) {
     return {
       title: step.title,
-      lines: step.guidedItems.map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text)),
-      note: "Shown from the current guided Mass text."
+      lines: step.guidedItems.map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text))
     };
   }
 
   return {
     title: step.title,
-    lines: [step.summary, step.guidance].filter((line): line is string => Boolean(line)),
-    note: "Review copy for private testing."
+    lines: [step.summary, step.guidance].filter((line): line is string => Boolean(line))
   };
 }
 
@@ -1221,6 +1215,7 @@ const styles = StyleSheet.create({
     fontSize: attendTypography.titleSize,
     lineHeight: attendTypography.titleLineHeight,
     marginBottom: 44,
+    marginTop: attendSpacing.guidedClusterTop,
     textAlign: "center",
     width: "100%"
   },
@@ -1228,7 +1223,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: attendSpacing.guidedClusterGap,
     justifyContent: "flex-start",
-    marginTop: attendSpacing.guidedClusterTop,
     maxWidth: attendSpacing.phraseMeasure,
     paddingBottom: 6,
     width: "100%"
@@ -1241,7 +1235,7 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   guidedTitleCompact: {
-    marginBottom: 8
+    marginBottom: 24
   },
   guidedBeatGroupCompact: {
     marginTop: 0
@@ -1662,12 +1656,6 @@ const styles = StyleSheet.create({
     fontFamily: "Georgia",
     fontSize: 18,
     lineHeight: 27
-  },
-  fullPrayerNote: {
-    color: attendPalette.warmGray,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: spacing.sm
   },
   sheetHeader: {
     alignItems: "flex-start",

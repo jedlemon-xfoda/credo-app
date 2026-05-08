@@ -15,7 +15,8 @@ export type VariantGroupId =
   | "eucharistic-prayer"
   | "dismissal"
   | "blessing"
-  | "gospel-acclamation";
+  | "gospel-acclamation"
+  | "standalone-kyrie";
 
 export type VariantOption = {
   branchId?: string;
@@ -94,7 +95,7 @@ const shortResponseKeys = new Set([
   "response_we_lift_them_up"
 ]);
 
-const suppressAmbientIds = new Set(["penitential-intro", "gloria-ambient"]);
+const suppressAmbientIds = new Set(["gloria-ambient"]);
 const optionalAmbientIds = new Set(["announcements-listen", "communion-thanksgiving"]);
 const requiredAmbientIds = new Set([
   "branch-ep-i-chalice-elevation",
@@ -156,8 +157,15 @@ export function getVariantRuleForPage(step: MassFlowStep, page: RuntimeGuidedPag
     };
   }
 
-  if (step.id === "penitential-act" && itemIds.some((id) => id === "penitential-intro" || id.startsWith("confiteor-") || id.startsWith("kyrie-"))) {
-    return branchVariantRule("penitential-act", "Penitential Act form", ["penitential_act", "sprinkling_rite"]);
+  if (
+    step.id === "penitential-act" &&
+    itemIds.some((id) => id === "confiteor-1" || id === "branch-confiteor-prayer" || id === "branch-dialogue-have-mercy" || id === "branch-tropes-contrite")
+  ) {
+    return penitentialVariantRule();
+  }
+
+  if (step.id === "penitential-act" && itemIds.some((id) => id === "kyrie-lord-1-listen" || id === "branch-kyrie-english-lord-1-listen" || id === "branch-kyrie-greek-lord-1-listen")) {
+    return standaloneKyrieVariantRule();
   }
 
   if (step.id === "gospel-acclamation" && itemIds.some((id) => id.includes("gospel-acclamation"))) {
@@ -193,8 +201,12 @@ export function getGestureForPage(step: MassFlowStep, page: RuntimeGuidedPage): 
     return gesture("sign_of_cross", "gesture.sign_of_cross", "cross", "Sign of the Cross");
   }
 
+  if (searchable.includes("most grievous fault")) {
+    return gesture("breast_strike", "gesture.breast_strike.small", "hand", "Strike breast");
+  }
+
   if (searchable.includes("strike breast") || searchable.includes("fault")) {
-    return gesture("breast_strike", "gesture.breast_strike", "hand", "Strike breast");
+    return gesture("breast_strike", "gesture.breast_strike.large", "hand", "Strike breast");
   }
 
   if (searchable.includes("forehead, lips, heart") || searchable.includes("small cross")) {
@@ -259,6 +271,47 @@ function branchVariantRule(groupId: VariantGroupId, title: string, kinds: Array<
   }
 
   return { groupId, options, title };
+}
+
+function penitentialVariantRule(): VariantRule | undefined {
+const heardLabels: Record<string, string> = {
+    "penitential-confiteor": "I confess to almighty God...",
+    "penitential-dialogue": "Have mercy on us, O Lord.",
+    "penitential-tropes": "You were sent to heal the contrite of heart..."
+  };
+
+  const options = massFlowBranchGroups
+    .filter((branch) => branch.kind === "penitential_act")
+    .map((branch) => ({
+      branchId: branch.id,
+      id: branch.id,
+      label: heardLabels[branch.id] ?? branch.title
+    }));
+
+  if (options.length === 0) {
+    return undefined;
+  }
+
+  return { groupId: "penitential-act", options, title: "Which form are you hearing?" };
+}
+
+function standaloneKyrieVariantRule(): VariantRule {
+  return {
+    groupId: "standalone-kyrie",
+    title: "Which Kyrie are you hearing?",
+    options: [
+      {
+        branchId: "standalone-kyrie-english",
+        id: "standalone-kyrie-english",
+        label: "Lord, have mercy."
+      },
+      {
+        branchId: "standalone-kyrie-greek-latin",
+        id: "standalone-kyrie-greek-latin",
+        label: "Kyrie, eleison."
+      }
+    ]
+  };
 }
 
 function gesture(kind: GestureKind, assetKey: string, fallbackShape: GestureMetadata["fallbackShape"], cadenceLabel: string): GestureMetadata {

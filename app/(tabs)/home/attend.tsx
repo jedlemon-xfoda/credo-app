@@ -9,7 +9,7 @@ import { AttendDock, AttendSheet, GuidanceChip, PostureBadge, PostureGlyphIcon, 
 import { attendColors as attendPalette, attendSpacing, attendTypography } from "../../../constants/attendTheme";
 import { colors, spacing } from "../../../constants/theme";
 import { getGuidedPagePolicy, type AmbientPolicy, type GestureMetadata, type VariantOption, type VariantRule } from "../../../data/attendRuntimePolicies";
-import { labelPosture, massFlowSections, massFlowSteps } from "../../../data/massFlow";
+import { labelPosture, massFlowBranchGroups, massFlowSections, massFlowSteps } from "../../../data/massFlow";
 import { useDailyJourney } from "../../../hooks/useDailyJourney";
 import type { MassFlowStep, MassGuidedItem, MassTextBlock } from "../../../types";
 
@@ -35,16 +35,22 @@ export default function AttendScreen() {
   const [variantOpen, setVariantOpen] = useState(false);
   const [selectedGreetingResponse, setSelectedGreetingResponse] = useState("And with your spirit.");
   const [selectedVariantValue, setSelectedVariantValue] = useState("And with your spirit.");
+  const [selectedPenitentialBranchId, setSelectedPenitentialBranchId] = useState("penitential-confiteor");
+  const [selectedStandaloneKyrieBranchId, setSelectedStandaloneKyrieBranchId] = useState("standalone-kyrie-english");
   const resumed = useRef(false);
   const isExitingRef = useRef(false);
   const suppressPositionPersist = useRef(false);
   const step = massFlowSteps[index];
-  const guidedItems = step.guidedItems ?? [];
-  const guidedPages = useMemo(() => buildGuidedPages(step), [step]);
+  const effectiveStep = useMemo(
+    () => getEffectiveAttendStep(step, selectedPenitentialBranchId, selectedStandaloneKyrieBranchId),
+    [selectedPenitentialBranchId, selectedStandaloneKyrieBranchId, step]
+  );
+  const guidedItems = effectiveStep.guidedItems ?? [];
+  const guidedPages = useMemo(() => buildGuidedPages(effectiveStep), [effectiveStep]);
   const hasGuidedItems = guidedPages.length > 0;
   const guidedPage = guidedPages[guidedIndex];
-  const guidedPagePolicy = useMemo(() => (guidedPage ? getGuidedPagePolicy(step, guidedPage) : undefined), [guidedPage, step]);
-  const finalStep = step.id === "dismissal";
+  const guidedPagePolicy = useMemo(() => (guidedPage ? getGuidedPagePolicy(effectiveStep, guidedPage) : undefined), [effectiveStep, guidedPage]);
+  const finalStep = effectiveStep.id === "dismissal";
 
   useEffect(() => {
     setLearnOpen(false);
@@ -54,6 +60,16 @@ export default function AttendScreen() {
     setMoreOpen(false);
     setVariantOpen(false);
   }, [step.id]);
+
+  useEffect(() => {
+    setVariantOpen(false);
+  }, [guidedPage?.id]);
+
+  useEffect(() => {
+    if (guidedIndex >= guidedPages.length && guidedPages.length > 0) {
+      setGuidedIndex(guidedPages.length - 1);
+    }
+  }, [guidedIndex, guidedPages.length]);
 
   useEffect(() => {
     if (ready && !isExitingRef.current) {
@@ -101,6 +117,7 @@ export default function AttendScreen() {
     if (isExitingRef.current) {
       return;
     }
+    setVariantOpen(false);
     if (hasGuidedItems && guidedIndex > 0) {
       setFullPrayerNotice(false);
       setGuidedIndex((current) => Math.max(0, current - 1));
@@ -129,6 +146,7 @@ export default function AttendScreen() {
     if (isExitingRef.current) {
       return;
     }
+    setVariantOpen(false);
     if (finalStep) {
       await handleCompleteAttend();
       return;
@@ -185,6 +203,8 @@ export default function AttendScreen() {
     await setAttendPosition(massFlowSteps[0].id);
     setIndex(0);
     setGuidedIndex(0);
+    setSelectedPenitentialBranchId("penitential-confiteor");
+    setSelectedStandaloneKyrieBranchId("standalone-kyrie-english");
     setFullPrayerNotice(false);
     setLostOpen(false);
     setMoreOpen(false);
@@ -227,7 +247,7 @@ export default function AttendScreen() {
             page={guidedPage}
             paused={paused}
             responseOverride={selectedGreetingResponse}
-            step={step}
+            step={effectiveStep}
             total={guidedPages.length}
             finalStep={finalStep}
             canGoPrevious={index > 0 || guidedIndex > 0}
@@ -322,6 +342,12 @@ export default function AttendScreen() {
               setSelectedVariantValue(value);
               if (guidedPagePolicy?.variantGroup?.groupId === "greeting") {
                 setSelectedGreetingResponse(value);
+              } else if (guidedPagePolicy?.variantGroup?.groupId === "penitential-act" && option.branchId) {
+                setSelectedPenitentialBranchId(option.branchId);
+                setSelectedVariantValue(option.branchId);
+              } else if (guidedPagePolicy?.variantGroup?.groupId === "standalone-kyrie" && option.branchId) {
+                setSelectedStandaloneKyrieBranchId(option.branchId);
+                setSelectedVariantValue(option.branchId);
               }
               setVariantOpen(false);
             }}
@@ -334,7 +360,7 @@ export default function AttendScreen() {
             item={guidedPage?.items.find((item) => item.fullPrayerKey) ?? guidedPage?.items[0]}
             onClose={() => setFullPrayerNotice(false)}
             responseOverride={selectedGreetingResponse}
-            step={step}
+            step={effectiveStep}
           />
         ) : null}
 
@@ -342,6 +368,29 @@ export default function AttendScreen() {
       </View>
     </SafeAreaView>
   );
+}
+
+function getEffectiveAttendStep(step: MassFlowStep, penitentialBranchId: string, standaloneKyrieBranchId: string): MassFlowStep {
+  if (step.id !== "penitential-act") {
+    return step;
+  }
+
+  const penitentialBranch =
+    massFlowBranchGroups.find((branch) => branch.id === penitentialBranchId && branch.kind === "penitential_act") ??
+    massFlowBranchGroups.find((branch) => branch.id === "penitential-confiteor");
+  const standaloneKyrieBranch =
+    massFlowBranchGroups.find((branch) => branch.id === standaloneKyrieBranchId && branch.kind === "standalone_kyrie") ??
+    massFlowBranchGroups.find((branch) => branch.id === "standalone-kyrie-english");
+
+  const guidedItems = [
+    ...(penitentialBranch?.guidedItems ?? step.guidedItems ?? []),
+    ...(penitentialBranch?.id === "penitential-tropes" || penitentialBranch?.kind === "sprinkling_rite" ? [] : standaloneKyrieBranch?.guidedItems ?? [])
+  ];
+
+  return {
+    ...step,
+    guidedItems
+  };
 }
 
 function buildGuidedPages(step: MassFlowStep): GuidedPage[] {
@@ -423,6 +472,32 @@ function buildGuidedPages(step: MassFlowStep): GuidedPage[] {
 
 function getCadenceGroup(stepId: string, itemId: string) {
   const groups: Record<string, string[][]> = {
+    "penitential-act": [
+      ["branch-confiteor-fault-1", "branch-confiteor-fault-1-gesture"],
+      ["branch-confiteor-fault-2", "branch-confiteor-fault-2-gesture"],
+      ["branch-confiteor-fault-3", "branch-confiteor-fault-3-gesture"],
+      ["branch-confiteor-absolution", "branch-confiteor-amen"],
+      ["branch-dialogue-have-mercy", "branch-dialogue-sinned"],
+      ["branch-dialogue-show-mercy", "branch-dialogue-salvation"],
+      ["branch-dialogue-absolution", "branch-dialogue-amen"],
+      ["branch-tropes-contrite", "branch-tropes-lord"],
+      ["branch-tropes-sinners", "branch-tropes-christ"],
+      ["branch-tropes-intercede", "branch-tropes-lord-repeat"],
+      ["branch-tropes-absolution", "branch-tropes-amen"],
+      ["branch-kyrie-english-lord-1-listen", "branch-kyrie-english-lord-1-response"],
+      ["branch-kyrie-english-christ-listen", "branch-kyrie-english-christ-response"],
+      ["branch-kyrie-english-lord-2-listen", "branch-kyrie-english-lord-2-response"],
+      ["branch-kyrie-greek-lord-1-listen", "branch-kyrie-greek-lord-1-response"],
+      ["branch-kyrie-greek-christ-listen", "branch-kyrie-greek-christ-response"],
+      ["branch-kyrie-greek-lord-2-listen", "branch-kyrie-greek-lord-2-response"],
+      ["confiteor-fault-1", "confiteor-fault-1-gesture"],
+      ["confiteor-fault-2", "confiteor-fault-2-gesture"],
+      ["confiteor-fault-3", "confiteor-fault-3-gesture"],
+      ["confiteor-absolution", "confiteor-amen"],
+      ["kyrie-lord-1-listen", "kyrie-lord-1"],
+      ["kyrie-christ-listen", "kyrie-christ"],
+      ["kyrie-lord-2-listen", "kyrie-lord-2"]
+    ],
     "first-reading": [["first-reading-ending", "first-reading-response"]],
     "second-reading": [["second-reading-ending", "second-reading-response"]],
     gospel: [
@@ -535,7 +610,7 @@ function GuidedMoment({
                 {itemIndex > 0 ? <SacredDivider style={styles.groupDivider} /> : null}
                 <GuidanceChip type={item.guidanceType} />
                 <Text style={[styles.guidedPhrase, page.items.length > 1 && styles.guidedPhraseGrouped, getGuidedPhraseStyle(displayText)]}>{displayText}</Text>
-                {item.cadenceCue ? <Text style={styles.cadenceCue}>({item.cadenceCue})</Text> : null}
+                {item.cadenceCue && !page.items.some((candidate) => candidate.text === "Strike your breast.") ? <Text style={styles.cadenceCue}>({item.cadenceCue})</Text> : null}
                 {page.description && itemIndex === 0 ? <Text style={styles.groupDescription}>{page.description}</Text> : null}
                 {variantRule && itemIndex === page.items.length - 1 ? (
                   <Pressable
@@ -550,10 +625,10 @@ function GuidedMoment({
                     <Text style={styles.variantLinkText}>Hearing something different?</Text>
                   </Pressable>
                 ) : null}
-                {item.durationHint ? <Text style={styles.durationHint}>{item.durationHint}</Text> : null}
               </View>
             );
           })}
+          {getPageDurationHint(page) ? <Text style={styles.durationHint}>{getPageDurationHint(page)}</Text> : null}
         </View>
       </View>
 
@@ -989,6 +1064,10 @@ function getVisibleProgressDots(total: number, currentIndex: number) {
   return Array.from({ length: 5 }, (_, index) => start + index);
 }
 
+function getPageDurationHint(page: GuidedPage) {
+  return page.items.find((item) => item.durationHint)?.durationHint;
+}
+
 function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefined, responseOverride: string) {
   const currentKey = item?.fullPrayerKey;
   const keyContent = currentKey ? MASS_CONTENT[currentKey] : undefined;
@@ -996,6 +1075,28 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
     .map((block) => resolveMassTextBlock(block, MASS_CONTENT))
     .map((block) => block.text.trim())
     .filter(Boolean);
+
+  if (currentKey === "penitential_dialogue" || currentKey === "penitential_tropes") {
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
+
+    if (groupedLines.length > 0) {
+      return {
+        title: step.title,
+        lines: groupedLines
+      };
+    }
+  }
+
+  if (currentKey === "kyrie" && step.guidedItems?.some((guidedItem) => guidedItem.id.startsWith("branch-kyrie-"))) {
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
+
+    if (groupedLines.length > 0) {
+      return {
+        title: step.title,
+        lines: groupedLines
+      };
+    }
+  }
 
   if (keyContent) {
     return {
@@ -1005,10 +1106,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   }
 
   if (currentKey && step.guidedItems) {
-    const groupedLines = step.guidedItems
-      .filter((guidedItem) => guidedItem.fullPrayerKey === currentKey)
-      .map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text))
-      .filter(Boolean);
+    const groupedLines = getGuidedFullPrayerLines(step, currentKey, responseOverride);
 
     if (groupedLines.length > 0) {
       return {
@@ -1036,6 +1134,51 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
     title: step.title,
     lines: [step.summary, step.guidance].filter((line): line is string => Boolean(line))
   };
+}
+
+function getGuidedFullPrayerLines(step: MassFlowStep, currentKey: string, responseOverride: string) {
+  if (currentKey === "penitential_dialogue") {
+    const lines = getCallAndResponseFullPrayerLines(step, [
+      ["branch-dialogue-have-mercy", "branch-dialogue-sinned"],
+      ["branch-dialogue-show-mercy", "branch-dialogue-salvation"]
+    ]);
+    if (lines.length > 0) {
+      return lines;
+    }
+  }
+
+  if (currentKey === "penitential_tropes") {
+    const lines = getCallAndResponseFullPrayerLines(step, [
+      ["branch-tropes-contrite", "branch-tropes-lord"],
+      ["branch-tropes-sinners", "branch-tropes-christ"],
+      ["branch-tropes-intercede", "branch-tropes-lord-repeat"]
+    ]);
+    if (lines.length > 0) {
+      return lines;
+    }
+  }
+
+  return (
+    step.guidedItems
+      ?.filter((guidedItem) => guidedItem.fullPrayerKey === currentKey)
+      .map((guidedItem) => (guidedItem.id === "greeting-response" ? responseOverride : guidedItem.text))
+      .filter(Boolean) ?? []
+  );
+}
+
+function getCallAndResponseFullPrayerLines(step: MassFlowStep, pairs: string[][]) {
+  const items = step.guidedItems ?? [];
+
+  return pairs.flatMap(([listenId, responseId]) => {
+    const listen = items.find((item) => item.id === listenId);
+    const response = items.find((item) => item.id === responseId);
+
+    if (!listen || !response) {
+      return [];
+    }
+
+    return ["Celebrant:", listen.text, "People:", response.text];
+  });
 }
 
 function getGuidedPhraseStyle(text: string) {

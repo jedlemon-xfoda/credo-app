@@ -1,9 +1,18 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
+import { Text } from "react-native";
 import AttendScreen from "../app/(tabs)/home/attend";
 import { storageKeys } from "../constants/storage";
 import { getAmbientPolicy, getGestureForPage, getVariantRuleForPage, shouldShowFullPrayerAction } from "../data/attendRuntimePolicies";
-import { eucharisticPrayerSharedCadence, massFlowBranchGroups, massFlowSteps, massResponseLanguageOptions, resolveMassFlowConfiguration } from "../data/massFlow";
+import {
+  eucharisticPrayerSharedCadence,
+  massFlowBranchGroups,
+  massFlowSteps,
+  massResponseLanguageOptions,
+  resolveMassFlowConfiguration,
+  resolvePenitentialActForm,
+  shouldIncludeStandaloneKyrie
+} from "../data/massFlow";
 import { MASS_CONTENT } from "../services/massContent";
 import { createDefaultJourneyState, getLocalDateKey } from "../services/journeyState";
 import * as journeyStateService from "../services/journeyState";
@@ -62,6 +71,15 @@ function pageFor(stepId: string, itemIds: string[]) {
     id: itemIds.join("-page"),
     items
   };
+}
+
+function textOrder(first: string, second: string) {
+  const texts = screen.UNSAFE_getAllByType(Text).map((node) => {
+    const children = node.props.children;
+    return Array.isArray(children) ? children.join("") : String(children);
+  });
+
+  return texts.findIndex((text) => text === first) - texts.findIndex((text) => text === second);
 }
 
 describe("Attend flow", () => {
@@ -243,7 +261,35 @@ describe("Attend flow", () => {
     expect(massResponseLanguageOptions.response_and_with_your_spirit.latin).toBe("Et cum spiritu tuo.");
     expect(massResponseLanguageOptions.kyrie.greek).toContain("Kyrie");
     expect(massResponseLanguageOptions.holy.latin).toContain("Sanctus");
-    expect(resolveMassFlowConfiguration({ responseLanguage: "greek" }).branchIds).toContain("penitential-tropes");
+    expect(resolveMassFlowConfiguration({ responseLanguage: "greek" }).branchIds).toContain("standalone-kyrie-greek-latin");
+  });
+
+  it("resolves Penitential Act defaults by Mass context", () => {
+    expect(resolvePenitentialActForm()).toBe("confiteor");
+    expect(resolvePenitentialActForm({ massDayKind: "sunday" })).toBe("confiteor");
+    expect(resolvePenitentialActForm({ massDayKind: "holy_day" })).toBe("confiteor");
+    expect(resolvePenitentialActForm({ massDayKind: "solemnity" })).toBe("confiteor");
+    expect(resolvePenitentialActForm({ massDayKind: "weekday" })).toBe("tropes");
+    expect(resolvePenitentialActForm({ penitentialAct: "dialogue" })).toBe("dialogue");
+    expect(resolveMassFlowConfiguration({ massDayKind: "weekday" }).branchIds).toContain("penitential-tropes");
+  });
+
+  it("includes standalone Kyrie only after Confiteor or Dialogue Form", () => {
+    expect(shouldIncludeStandaloneKyrie("confiteor")).toBe(true);
+    expect(shouldIncludeStandaloneKyrie("dialogue")).toBe(true);
+    expect(shouldIncludeStandaloneKyrie("tropes")).toBe(false);
+    expect(resolveMassFlowConfiguration({ penitentialAct: "confiteor" }).branchIds).toContain("standalone-kyrie-english");
+    expect(resolveMassFlowConfiguration({ penitentialAct: "dialogue" }).branchIds).toContain("standalone-kyrie-english");
+    expect(resolveMassFlowConfiguration({ penitentialAct: "tropes" }).branchIds).not.toContain("standalone-kyrie-english");
+  });
+
+  it("defines standalone Kyrie English and Greek or Latin branches", () => {
+    expect(massFlowBranchGroups.find((branch) => branch.id === "standalone-kyrie-english")?.guidedItems.map((item) => item.text)).toEqual(
+      expect.arrayContaining(["Lord, have mercy.", "Christ, have mercy."])
+    );
+    expect(massFlowBranchGroups.find((branch) => branch.id === "standalone-kyrie-greek-latin")?.guidedItems.map((item) => item.text)).toEqual(
+      expect.arrayContaining(["Kyrie, eleison.", "Christe, eleison."])
+    );
   });
 
   it("shows full-prayer actions only for substantial prayer pages", () => {
@@ -261,9 +307,23 @@ describe("Attend flow", () => {
 
   it("marks variant eligibility only at branch decision screens", () => {
     expect(getVariantRuleForPage(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))?.groupId).toBe("greeting");
-    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))?.options.map((option) => option.branchId)).toEqual(
-      expect.arrayContaining(["penitential-confiteor", "penitential-dialogue", "penitential-tropes", "sprinkling-rite"])
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-silence"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.options.map((option) => option.branchId)).toEqual(
+      expect.arrayContaining(["penitential-confiteor", "penitential-dialogue", "penitential-tropes"])
     );
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.options.map((option) => option.branchId)).not.toContain("sprinkling-rite");
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.title).toBe("Which form are you hearing?");
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.options.map((option) => option.label)).toEqual(
+      expect.arrayContaining(["I confess to almighty God...", "Have mercy on us, O Lord.", "You were sent to heal the contrite of heart..."])
+    );
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))?.options.map((option) => option.label)).not.toContain("Sprinkling with water");
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["kyrie-lord-1-listen", "kyrie-lord-1"]))?.groupId).toBe("standalone-kyrie");
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["kyrie-lord-1-listen", "kyrie-lord-1"]))?.options.map((option) => option.label)).toEqual(
+      expect.arrayContaining(["Lord, have mercy.", "Kyrie, eleison."])
+    );
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["kyrie-lord-1", "kyrie-christ", "kyrie-lord-2"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("gospel-acclamation"), pageFor("gospel-acclamation", ["gospel-acclamation-alleluia"]))?.groupId).toBe("gospel-acclamation");
     expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))?.groupId).toBe("creed");
     expect(getVariantRuleForPage(stepFor("preface"), pageFor("preface", ["preface-prayer"]))?.groupId).toBe("eucharistic-prayer");
@@ -277,6 +337,8 @@ describe("Attend flow", () => {
   it("provides gesture metadata for major gesture moments", () => {
     expect(getGestureForPage(stepFor("greeting"), pageFor("greeting", ["greeting-sign-cross"]))?.kind).toBe("sign_of_cross");
     expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.kind).toBe("breast_strike");
+    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.assetKey).toBe("gesture.breast_strike.large");
+    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-3"]))?.assetKey).toBe("gesture.breast_strike.small");
     expect(getGestureForPage(stepFor("gospel"), pageFor("gospel", ["gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response"]))?.kind).toBe("triple_gospel_cross");
     expect(getGestureForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-incarnation-bow"]))?.kind).toBe("bow");
     expect(getGestureForPage(stepFor("consecration"), pageFor("consecration", ["consecration-host-elevation"]))?.kind).toBe("elevation_host");
@@ -288,7 +350,44 @@ describe("Attend flow", () => {
     expect(getAmbientPolicy(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe("required");
     expect(getAmbientPolicy(stepFor("consecration"), pageFor("consecration", ["consecration-host-elevation"]))).toBe("required");
     expect(getAmbientPolicy(stepFor("communion"), pageFor("communion", ["communion-thanksgiving"]))).toBe("optional");
-    expect(getAmbientPolicy(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-intro"]))).toBe("suppress_by_default");
+    expect(getAmbientPolicy(stepFor("penitential-act"), pageFor("penitential-act", ["penitential-silence"]))).toBe("required");
+  });
+
+  it("defines the complete Confiteor guided sequence with celebrant framing", () => {
+    const ids = guidedIdsFor("penitential-act");
+    const expectedConfiteor = [
+      "penitential-intro",
+      "penitential-silence",
+      "confiteor-1",
+      "confiteor-2",
+      "confiteor-sinned",
+      "confiteor-thoughts",
+      "confiteor-actions",
+      "confiteor-fault-1",
+      "confiteor-fault-1-gesture",
+      "confiteor-fault-2",
+      "confiteor-fault-2-gesture",
+      "confiteor-fault-3",
+      "confiteor-fault-3-gesture",
+      "confiteor-ending-request",
+      "confiteor-absolution",
+      "confiteor-amen",
+      "kyrie-lord-1-listen",
+      "kyrie-lord-1"
+    ];
+    const indexes = expectedConfiteor.map((id) => ids.indexOf(id));
+
+    expect(indexes.every((index) => index >= 0)).toBe(true);
+    expect([...indexes].sort((a, b) => a - b)).toEqual(indexes);
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "penitential-intro")?.guidanceType).toBe("listen");
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "confiteor-absolution")?.guidanceType).toBe("listen");
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "kyrie-intro")).toBeUndefined();
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "confiteor-fault-1-gesture")?.guidanceType).toBe("you_do");
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "confiteor-fault-1-gesture")?.text).toBe("Strike your breast.");
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "confiteor-absolution")?.text).toBe(
+      "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life."
+    );
+    expect(stepFor("penitential-act").guidedItems?.find((item) => item.id === "kyrie-lord-1-listen")?.durationHint).toBe("The Kyrie may be sung or spoken.");
   });
 
   it("resumes persisted attendPosition", async () => {
@@ -534,7 +633,210 @@ describe("Attend flow", () => {
     expect(screen.getAllByText("I believe in one God,").length).toBeGreaterThan(1);
   });
 
-  it("groups the three Kyrie invocations on one guided screen", async () => {
+  it("shows Penitential Act variants only after the shared opening and keeps Confiteor full prayer available", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Pause briefly and ask for mercy.")).toBeTruthy();
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
+    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("I confess to almighty God")).toBeTruthy();
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getAllByText("I confess to almighty God").length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText("Celebrant:")).toBeNull();
+    expect(screen.queryByText("People:")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which form are you hearing?")).toBeTruthy();
+    expect(screen.getByText("I confess to almighty God...")).toBeTruthy();
+    expect(screen.getByText("Have mercy on us, O Lord.")).toBeTruthy();
+    expect(screen.getByText("You were sent to heal the contrite of heart...")).toBeTruthy();
+    expect(screen.queryByText("Sprinkling with water")).toBeNull();
+    expect(screen.queryByText("Penitential Act: Confiteor")).toBeNull();
+    expect(screen.queryByText("Penitential Act: Dialogue Form")).toBeNull();
+    expect(screen.queryByText("Penitential Act: Kyrie Tropes")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Select Have mercy on us, O Lord."));
+    expect(screen.queryByText("Which form are you hearing?")).toBeNull();
+    expect(screen.getByText("Have mercy on us, O Lord.")).toBeTruthy();
+    expect(screen.getByText("For we have sinned against you.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getAllByText("Celebrant:").length).toBe(2);
+    expect(screen.getAllByText("People:").length).toBe(2);
+    expect(screen.getAllByText("Have mercy on us, O Lord.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("For we have sinned against you.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Show us, O Lord, your mercy.")).toBeTruthy();
+    expect(screen.getByText("And grant us your salvation.")).toBeTruthy();
+  });
+
+  it("walks through the complete Confiteor including later prayer lines and absolution Amen", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+
+    const expectedMoments = [
+      "Pause briefly and ask for mercy.",
+      "I confess to almighty God",
+      "and to you, my brothers and sisters,",
+      "that I have greatly sinned,",
+      "in my thoughts and in my words,",
+      "in what I have done and in what I have failed to do,",
+      "through my fault",
+      "through my fault",
+      "through my most grievous fault",
+      "therefore I ask blessed Mary ever-Virgin,\nall the Angels and Saints,\nand you, my brothers and sisters,\nto pray for me to the Lord our God."
+    ];
+
+    for (const text of expectedMoments) {
+      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+      expect(screen.getByText(text)).toBeTruthy();
+      if (text.includes("fault")) {
+        expect(screen.getByText("Strike your breast.")).toBeTruthy();
+        expect(screen.queryByText("(strike breast)")).toBeNull();
+      }
+    }
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.")).toBeTruthy();
+    expect(screen.getByText("Amen.")).toBeTruthy();
+
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getAllByText("Lord, have mercy.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("The Kyrie may be sung or spoken.")).toBeTruthy();
+    expect(textOrder("Lord, have mercy.", "The Kyrie may be sung or spoken.")).toBeLessThan(0);
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+  });
+
+  it("closes variant options on advance without leaving stale choices", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which form are you hearing?")).toBeTruthy();
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.queryByText("Which form are you hearing?")).toBeNull();
+    expect(screen.queryByText("Have mercy on us, O Lord.")).toBeNull();
+    expect(screen.queryByText("And with your spirit.")).toBeNull();
+    expect(screen.getByText("and to you, my brothers and sisters,")).toBeTruthy();
+  });
+
+  it("skips standalone Kyrie when Kyrie Tropes are selected", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    fireEvent.press(screen.getByLabelText("Select You were sent to heal the contrite of heart..."));
+    expect(screen.getByText("You were sent to heal the contrite of heart:\nLord, have mercy.")).toBeTruthy();
+    expect(screen.getAllByText("Lord, have mercy.").length).toBe(1);
+
+    for (let count = 0; count < 3; count += 1) {
+      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    }
+
+    expect(screen.getByText("May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.")).toBeTruthy();
+    expect(screen.getByText("Amen.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.queryByText("Which Kyrie are you hearing?")).toBeNull();
+    expect(screen.queryByText("The Kyrie may be sung or spoken.")).toBeNull();
+    expect(screen.getByText("Glory to God")).toBeTruthy();
+  });
+
+  it("shows complete Kyrie Tropes call and response in the full-prayer overlay", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "penitential-act"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    fireEvent.press(screen.getByLabelText("Select You were sent to heal the contrite of heart..."));
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+
+    expect(screen.getAllByText("Celebrant:").length).toBe(3);
+    expect(screen.getAllByText("People:").length).toBe(3);
+    expect(screen.getAllByText("You were sent to heal the contrite of heart:\nLord, have mercy.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("You came to call sinners:\nChrist, have mercy.")).toBeTruthy();
+    expect(screen.getByText("You are seated at the right hand of the Father to intercede for us:\nLord, have mercy.")).toBeTruthy();
+    expect(screen.getAllByText("Lord, have mercy.").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("Christ, have mercy.").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("shows standalone Kyrie as listen-response cadence with language variants", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -551,12 +853,30 @@ describe("Attend flow", () => {
       expect(screen.getAllByText("Penitential Act").length).toBeGreaterThan(0);
     });
 
-    for (let count = 0; count < 6; count += 1) {
+    for (let count = 0; count < 12; count += 1) {
       fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     }
 
-    expect(screen.getAllByText("Lord, have mercy.").length).toBe(2);
-    expect(screen.getByText("Christ, have mercy.")).toBeTruthy();
+    expect(screen.getAllByText("Lord, have mercy.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("The Kyrie may be sung or spoken.")).toBeTruthy();
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+    expect(textOrder("Lord, have mercy.", "The Kyrie may be sung or spoken.")).toBeLessThan(0);
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which Kyrie are you hearing?")).toBeTruthy();
+    expect(screen.getAllByText("Lord, have mercy.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Kyrie, eleison.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Select Kyrie, eleison."));
+    expect(screen.queryByText("Which Kyrie are you hearing?")).toBeNull();
+    expect(screen.getAllByText("Kyrie, eleison.").length).toBeGreaterThanOrEqual(2);
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getAllByText("Kyrie, eleison.").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText("Christe, eleison.")).toBeTruthy();
+    expect(screen.queryByText("Christ, have mercy.")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getAllByText("Christe, eleison.").length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByText("Hearing something different?")).toBeNull();
   });
 
   it("groups Collect listen, description, and Amen on one guided screen", async () => {

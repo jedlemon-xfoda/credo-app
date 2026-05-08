@@ -29,6 +29,7 @@ type SectionInput = {
 export type MassFlowBranchKind =
   | "penitential_act"
   | "sprinkling_rite"
+  | "standalone_kyrie"
   | "eucharistic_prayer"
   | "gospel_acclamation"
   | "creed"
@@ -53,6 +54,7 @@ export type MassFlowBranch = {
 
 export type MassFlowResolverContext = {
   season?: LiturgicalSeason;
+  massDayKind?: "sunday" | "holy_day" | "solemnity" | "weekday";
   penitentialAct?: "confiteor" | "dialogue" | "tropes";
   useSprinklingRite?: boolean;
   eucharisticPrayer?: "ep-i" | "ep-ii" | "ep-iii" | "ep-iv";
@@ -67,6 +69,8 @@ export type ResolvedMassFlowConfiguration = {
   branchIds: string[];
   branches: MassFlowBranch[];
 };
+
+export type ResolvedPenitentialActForm = "confiteor" | "dialogue" | "tropes" | "sprinkling";
 
 function textBlock(id: string, role: MassTextBlock["role"], text: string, source = reviewSource): MassTextBlock {
   return { id, role, text, source };
@@ -162,7 +166,10 @@ const sectionInputs: SectionInput[] = [
         posture: "stand",
         textBlocks: [textBlock("penitential-you", "you", "Lord, have mercy.\nChrist, have mercy.\nLord, have mercy.")],
         guidedItems: [
-          guidedItem("penitential-intro", "ambient", "Penitential Act", {
+          guidedItem("penitential-intro", "listen", "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.", {
+            posture: "stand"
+          }),
+          guidedItem("penitential-silence", "ambient", "Pause briefly and ask for mercy.", {
             posture: "stand"
           }),
           guidedItem("confiteor-1", "you_say", "I confess to almighty God", {
@@ -173,28 +180,73 @@ const sectionInputs: SectionInput[] = [
             posture: "kneel",
             fullPrayerKey: "confiteor"
           }),
+          guidedItem("confiteor-sinned", "you_say", "that I have greatly sinned,", {
+            posture: "kneel",
+            fullPrayerKey: "confiteor"
+          }),
+          guidedItem("confiteor-thoughts", "you_say", "in my thoughts and in my words,", {
+            posture: "kneel",
+            fullPrayerKey: "confiteor"
+          }),
+          guidedItem("confiteor-actions", "you_say", "in what I have done and in what I have failed to do,", {
+            posture: "kneel",
+            fullPrayerKey: "confiteor"
+          }),
           guidedItem("confiteor-fault-1", "you_say", "through my fault", {
             posture: "kneel",
             cadenceCue: "strike breast",
             fullPrayerKey: "confiteor"
+          }),
+          guidedItem("confiteor-fault-1-gesture", "you_do", "Strike your breast.", {
+            posture: "kneel",
+            cadenceCue: "strike breast"
           }),
           guidedItem("confiteor-fault-2", "you_say", "through my fault", {
             posture: "kneel",
             cadenceCue: "strike breast",
             fullPrayerKey: "confiteor"
           }),
+          guidedItem("confiteor-fault-2-gesture", "you_do", "Strike your breast.", {
+            posture: "kneel",
+            cadenceCue: "strike breast"
+          }),
           guidedItem("confiteor-fault-3", "you_say", "through my most grievous fault", {
             posture: "kneel",
             cadenceCue: "strike breast",
             fullPrayerKey: "confiteor"
           }),
+          guidedItem("confiteor-fault-3-gesture", "you_do", "Strike your breast.", {
+            posture: "kneel",
+            cadenceCue: "strike breast"
+          }),
+          guidedItem("confiteor-ending-request", "you_say", "therefore I ask blessed Mary ever-Virgin,\nall the Angels and Saints,\nand you, my brothers and sisters,\nto pray for me to the Lord our God.", {
+            posture: "kneel",
+            fullPrayerKey: "confiteor"
+          }),
+          guidedItem("confiteor-absolution", "listen", "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.", {
+            posture: "stand"
+          }),
+          guidedItem("confiteor-amen", "you_say", "Amen.", {
+            posture: "stand",
+            fullPrayerKey: "response_amen"
+          }),
+          guidedItem("kyrie-lord-1-listen", "listen", "Lord, have mercy.", {
+            posture: "stand",
+            durationHint: "The Kyrie may be sung or spoken."
+          }),
           guidedItem("kyrie-lord-1", "you_say", "Lord, have mercy.", {
             posture: "stand",
             fullPrayerKey: "kyrie"
           }),
+          guidedItem("kyrie-christ-listen", "listen", "Christ, have mercy.", {
+            posture: "stand"
+          }),
           guidedItem("kyrie-christ", "you_say", "Christ, have mercy.", {
             posture: "stand",
             fullPrayerKey: "kyrie"
+          }),
+          guidedItem("kyrie-lord-2-listen", "listen", "Lord, have mercy.", {
+            posture: "stand"
           }),
           guidedItem("kyrie-lord-2", "you_say", "Lord, have mercy.", {
             posture: "stand",
@@ -929,12 +981,21 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     title: "Penitential Act: Confiteor",
     replacesStepId: "penitential-act",
     guidedItems: [
-      branchItem("branch-confiteor-intro", "listen", "Let us acknowledge our sins.", { posture: "stand" }),
+      branchItem("branch-confiteor-intro", "listen", "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.", { posture: "stand" }),
+      branchItem("branch-confiteor-silence", "ambient", "Pause briefly and ask for mercy.", { posture: "stand" }),
       branchItem("branch-confiteor-prayer", "you_say", "I confess to almighty God", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-brothers-start", "you_say", "and to you, my brothers and sisters,", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-sinned", "you_say", "that I have greatly sinned,", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-thoughts", "you_say", "in my thoughts and in my words,", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-actions", "you_say", "in what I have done and in what I have failed to do,", { posture: "stand", fullPrayerKey: "confiteor" }),
       branchItem("branch-confiteor-fault-1", "you_say", "through my fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-fault-1-gesture", "you_do", "Strike your breast.", { posture: "stand", cadenceCue: "strike breast" }),
       branchItem("branch-confiteor-fault-2", "you_say", "through my fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-fault-2-gesture", "you_do", "Strike your breast.", { posture: "stand", cadenceCue: "strike breast" }),
       branchItem("branch-confiteor-fault-3", "you_say", "through my most grievous fault", { posture: "stand", cadenceCue: "strike breast", fullPrayerKey: "confiteor" }),
-      branchItem("branch-confiteor-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-confiteor-fault-3-gesture", "you_do", "Strike your breast.", { posture: "stand", cadenceCue: "strike breast" }),
+      branchItem("branch-confiteor-ending-request", "you_say", "therefore I ask blessed Mary ever-Virgin,\nall the Angels and Saints,\nand you, my brothers and sisters,\nto pray for me to the Lord our God.", { posture: "stand", fullPrayerKey: "confiteor" }),
+      branchItem("branch-confiteor-absolution", "listen", "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.", { posture: "stand" }),
       branchItem("branch-confiteor-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
     fullPrayerKeys: ["confiteor", "response_amen"]
@@ -945,12 +1006,13 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     title: "Penitential Act: Dialogue Form",
     replacesStepId: "penitential-act",
     guidedItems: [
-      branchItem("branch-dialogue-intro", "listen", "Let us acknowledge our sins.", { posture: "stand" }),
+      branchItem("branch-dialogue-intro", "listen", "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.", { posture: "stand" }),
+      branchItem("branch-dialogue-silence", "ambient", "Pause briefly and ask for mercy.", { posture: "stand" }),
       branchItem("branch-dialogue-have-mercy", "listen", "Have mercy on us, O Lord.", { posture: "stand" }),
       branchItem("branch-dialogue-sinned", "you_say", "For we have sinned against you.", { posture: "stand", fullPrayerKey: "penitential_dialogue" }),
       branchItem("branch-dialogue-show-mercy", "listen", "Show us, O Lord, your mercy.", { posture: "stand" }),
       branchItem("branch-dialogue-salvation", "you_say", "And grant us your salvation.", { posture: "stand", fullPrayerKey: "penitential_dialogue" }),
-      branchItem("branch-dialogue-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-dialogue-absolution", "listen", "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.", { posture: "stand" }),
       branchItem("branch-dialogue-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
     fullPrayerKeys: ["penitential_dialogue", "response_amen"]
@@ -961,11 +1023,15 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     title: "Penitential Act: Kyrie Tropes",
     replacesStepId: "penitential-act",
     guidedItems: [
-      branchItem("branch-tropes-intro", "listen", "The celebrant or deacon sings or says invocations.", { posture: "stand" }),
+      branchItem("branch-tropes-intro", "listen", "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.", { posture: "stand" }),
+      branchItem("branch-tropes-silence", "ambient", "Pause briefly and ask for mercy.", { posture: "stand" }),
+      branchItem("branch-tropes-contrite", "listen", "You were sent to heal the contrite of heart:\nLord, have mercy.", { posture: "stand" }),
       branchItem("branch-tropes-lord", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
+      branchItem("branch-tropes-sinners", "listen", "You came to call sinners:\nChrist, have mercy.", { posture: "stand" }),
       branchItem("branch-tropes-christ", "you_say", "Christ, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
+      branchItem("branch-tropes-intercede", "listen", "You are seated at the right hand of the Father to intercede for us:\nLord, have mercy.", { posture: "stand" }),
       branchItem("branch-tropes-lord-repeat", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "penitential_tropes" }),
-      branchItem("branch-tropes-absolution", "listen", "The celebrant prays the absolution.", { posture: "stand" }),
+      branchItem("branch-tropes-absolution", "listen", "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.", { posture: "stand" }),
       branchItem("branch-tropes-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
     fullPrayerKeys: ["penitential_tropes", "response_amen"]
@@ -977,13 +1043,43 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     replacesStepId: "penitential-act",
     preferredSeason: ["easter"],
     guidedItems: [
-      branchItem("branch-sprinkling-intro", "listen", "The celebrant blesses water.", { posture: "stand", fullPrayerKey: "sprinkling_rite" }),
+      branchItem("branch-sprinkling-intro", "listen", "Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.", { posture: "stand" }),
+      branchItem("branch-sprinkling-silence", "ambient", "Pause briefly and ask for mercy.", { posture: "stand" }),
+      branchItem("branch-sprinkling-blessing", "listen", "The celebrant blesses water.", { posture: "stand", fullPrayerKey: "sprinkling_rite" }),
       branchItem("branch-sprinkling-ambient", "ambient", "The people are sprinkled as a reminder of Baptism.", { posture: "stand" }),
       branchItem("branch-sprinkling-song", "listen", "A chant or hymn may accompany the sprinkling.", { posture: "stand" }),
       branchItem("branch-sprinkling-collect", "listen", "The celebrant concludes the rite.", { posture: "stand" }),
       branchItem("branch-sprinkling-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
     fullPrayerKeys: ["sprinkling_rite", "response_amen"]
+  },
+  {
+    id: "standalone-kyrie-english",
+    kind: "standalone_kyrie",
+    title: "Standalone Kyrie: English",
+    guidedItems: [
+      branchItem("branch-kyrie-english-lord-1-listen", "listen", "Lord, have mercy.", { posture: "stand", durationHint: "The Kyrie may be sung or spoken." }),
+      branchItem("branch-kyrie-english-lord-1-response", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "kyrie" }),
+      branchItem("branch-kyrie-english-christ-listen", "listen", "Christ, have mercy.", { posture: "stand" }),
+      branchItem("branch-kyrie-english-christ-response", "you_say", "Christ, have mercy.", { posture: "stand", fullPrayerKey: "kyrie" }),
+      branchItem("branch-kyrie-english-lord-2-listen", "listen", "Lord, have mercy.", { posture: "stand" }),
+      branchItem("branch-kyrie-english-lord-2-response", "you_say", "Lord, have mercy.", { posture: "stand", fullPrayerKey: "kyrie" })
+    ],
+    fullPrayerKeys: ["kyrie"]
+  },
+  {
+    id: "standalone-kyrie-greek-latin",
+    kind: "standalone_kyrie",
+    title: "Standalone Kyrie: Greek/Latin",
+    guidedItems: [
+      branchItem("branch-kyrie-greek-lord-1-listen", "listen", "Kyrie, eleison.", { posture: "stand", durationHint: "The Kyrie may be sung or spoken." }),
+      branchItem("branch-kyrie-greek-lord-1-response", "you_say", "Kyrie, eleison.", { posture: "stand", fullPrayerKey: "kyrie" }),
+      branchItem("branch-kyrie-greek-christ-listen", "listen", "Christe, eleison.", { posture: "stand" }),
+      branchItem("branch-kyrie-greek-christ-response", "you_say", "Christe, eleison.", { posture: "stand", fullPrayerKey: "kyrie" }),
+      branchItem("branch-kyrie-greek-lord-2-listen", "listen", "Kyrie, eleison.", { posture: "stand" }),
+      branchItem("branch-kyrie-greek-lord-2-response", "you_say", "Kyrie, eleison.", { posture: "stand", fullPrayerKey: "kyrie" })
+    ],
+    fullPrayerKeys: ["kyrie"]
   },
   {
     id: "gospel-acclamation-ordinary",
@@ -1122,11 +1218,33 @@ function getBranch(id: string) {
   return massFlowBranchGroups.find((branch) => branch.id === id);
 }
 
+export function resolvePenitentialActForm(context: MassFlowResolverContext = {}): ResolvedPenitentialActForm {
+  if (context.useSprinklingRite) {
+    return "sprinkling";
+  }
+
+  if (context.penitentialAct) {
+    return context.penitentialAct;
+  }
+
+  if (context.massDayKind === "weekday") {
+    return "tropes";
+  }
+
+  return "confiteor";
+}
+
+export function shouldIncludeStandaloneKyrie(form: ResolvedPenitentialActForm): boolean {
+  return form === "confiteor" || form === "dialogue";
+}
+
+export function resolveStandaloneKyrieBranchId(context: MassFlowResolverContext = {}) {
+  return context.responseLanguage === "greek" || context.responseLanguage === "latin" ? "standalone-kyrie-greek-latin" : "standalone-kyrie-english";
+}
+
 export function resolveMassFlowConfiguration(context: MassFlowResolverContext = {}): ResolvedMassFlowConfiguration {
-  const penitentialSelection = context.responseLanguage === "greek" && !context.penitentialAct ? "tropes" : (context.penitentialAct ?? "confiteor");
-  const penitentialId = context.useSprinklingRite
-    ? "sprinkling-rite"
-    : `penitential-${penitentialSelection}`;
+  const penitentialForm = resolvePenitentialActForm(context);
+  const penitentialId = penitentialForm === "sprinkling" ? "sprinkling-rite" : `penitential-${penitentialForm}`;
   const gospelAcclamationId = context.gospelAcclamation
     ? `gospel-acclamation-${context.gospelAcclamation}`
     : context.season === "lent"
@@ -1134,6 +1252,7 @@ export function resolveMassFlowConfiguration(context: MassFlowResolverContext = 
       : "gospel-acclamation-ordinary";
   const branchIds = [
     penitentialId,
+    shouldIncludeStandaloneKyrie(penitentialForm) ? resolveStandaloneKyrieBranchId(context) : undefined,
     `eucharistic-prayer-${context.eucharisticPrayer?.replace("ep-", "") ?? "ii"}`,
     gospelAcclamationId,
     `creed-${context.creed ?? "nicene"}`,

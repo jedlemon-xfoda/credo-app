@@ -39,10 +39,27 @@ export type UserMassProfile = {
 };
 
 export type ContentTextStatus = "placeholder" | "review_only" | "licensed" | "public_domain" | "user_configured";
+export type ContentApprovalStatus = "approved" | "pending_review" | "draft";
+export type DynamicMassContentType =
+  | "first_reading"
+  | "psalm_response"
+  | "psalm_verses"
+  | "second_reading"
+  | "gospel_acclamation_verse"
+  | "gospel"
+  | "collect"
+  | "prayer_over_offerings"
+  | "communion_antiphon"
+  | "prayer_after_communion";
 
 export type ContentSourceProvider = "mock" | "usccb" | "evangelizo" | "universalis" | "manual_review";
 
 export type ContentMetadata = {
+  approvalStatus?: ContentApprovalStatus;
+  contentType?: DynamicMassContentType;
+  liturgicalDate?: string;
+  liturgicalYear?: "A" | "B" | "C";
+  reviewOnly?: boolean;
   sourceProvider: ContentSourceProvider;
   textStatus: ContentTextStatus;
   licensingNote: string;
@@ -67,7 +84,21 @@ export type MassTextBlock = {
   role: MassTextRole;
   text: string;
   contentKey?: string;
+  properKey?: string;
   source?: MassSourceMetadata;
+};
+
+export type MassGuidanceType = "you_say" | "you_do" | "listen" | "ambient";
+
+export type MassGuidedItem = {
+  id: string;
+  guidanceType: MassGuidanceType;
+  text: string;
+  posture?: MassPosture;
+  cadenceCue?: string;
+  durationHint?: string;
+  fullPrayerKey?: string;
+  dynamicTextKey?: string;
 };
 
 export type MassFlowStep = {
@@ -80,6 +111,7 @@ export type MassFlowStep = {
   posture?: MassPosture;
   optional?: boolean;
   textBlocks: MassTextBlock[];
+  guidedItems?: MassGuidedItem[];
   guidance?: string;
   source: MassSourceMetadata;
   listenAnchors: ListenAnchor[];

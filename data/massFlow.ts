@@ -71,6 +71,14 @@ export type MassFlowResolverContext = {
   gospelAcclamationVerseText?: string;
   gospelProclamationKey?: string;
   gospelProclamationText?: string;
+  collectPrayerKey?: string;
+  dailyCollectText?: string;
+  prayerOverOfferingsKey?: string;
+  prayerAfterCommunionKey?: string;
+  communionAntiphonKey?: string;
+  includeGloria?: boolean;
+  includeCreed?: boolean;
+  includeSequence?: boolean;
   penitentialAct?: "confiteor" | "dialogue" | "tropes";
   useSprinklingRite?: boolean;
   gloria?: "prescribed" | "omitted";
@@ -358,7 +366,12 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Collect",
         summary: "The celebrant gathers the prayers of the Church.",
         posture: "stand",
-        textBlocks: [textBlock("collect-celebrant", "celebrant", "The celebrant prays the Collect.")],
+        textBlocks: [
+          {
+            ...textBlock("collect-celebrant", "celebrant", "The celebrant prays the Collect."),
+            properKey: "collect"
+          }
+        ],
         guidedItems: [
           guidedItem("collect-listen", "listen", "Let us pray.", {
             posture: "stand"
@@ -367,7 +380,8 @@ const sectionInputs: SectionInput[] = [
             posture: "stand"
           }),
           guidedItem("collect-prayer", "listen", "The priest prays the Collect.", {
-            posture: "stand"
+            posture: "stand",
+            dynamicTextKey: "collect"
           }),
           guidedItem("collect-amen", "you_say", "Amen.", {
             posture: "stand"
@@ -389,13 +403,19 @@ const sectionInputs: SectionInput[] = [
         subtitle: "First Reading",
         summary: "God speaks through the Scriptures.",
         posture: "sit",
-        textBlocks: [textBlock("first-reading-reader", "reader", "The first reading is proclaimed.")],
+        textBlocks: [
+          {
+            ...textBlock("first-reading-reader", "reader", "The first reading is proclaimed."),
+            properKey: "firstReading"
+          }
+        ],
         guidedItems: [
           guidedItem("first-reading-sit", "you_do", "Sit for the First Reading.", {
             posture: "sit"
           }),
           guidedItem("first-reading-listen", "listen", "Listen to the reading.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "firstReading"
           }),
           guidedItem("first-reading-ending", "listen", "The word of the Lord.", {
             posture: "sit"
@@ -415,21 +435,32 @@ const sectionInputs: SectionInput[] = [
         summary: "The Church responds to the Word with prayer.",
         posture: "sit",
         textBlocks: [
-          textBlock("psalm-cantor", "cantor", "The psalm is sung or proclaimed."),
+          {
+            ...textBlock("psalm-cantor", "cantor", "The psalm is sung or proclaimed."),
+            properKey: "psalmResponse"
+          },
+          {
+            ...textBlock("psalm-verses-block", "cantor", "The psalm verses are sung or proclaimed."),
+            properKey: "psalmVerses"
+          },
           textBlock("psalm-you", "you", "The response becomes your prayer.", companionSource)
         ],
         guidedItems: [
           guidedItem("psalm-response-announced", "listen", "The psalm response is announced.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "psalmResponse"
           }),
           guidedItem("psalm-response-repeat", "you_say", "Repeat the psalm response.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "psalmResponse"
           }),
           guidedItem("psalm-verses", "listen", "Listen to the psalm verses.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "psalmVerses"
           }),
           guidedItem("psalm-response-return", "you_say", "Join in the response.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "psalmResponse"
           })
         ],
         guidance: "Let the response become your own prayer.",
@@ -442,10 +473,16 @@ const sectionInputs: SectionInput[] = [
         summary: "The apostolic witness strengthens the Church.",
         posture: "sit",
         optional: true,
-        textBlocks: [textBlock("second-reading-reader", "reader", "The second reading is proclaimed when appointed.")],
+        textBlocks: [
+          {
+            ...textBlock("second-reading-reader", "reader", "The second reading is proclaimed when appointed."),
+            properKey: "secondReading"
+          }
+        ],
         guidedItems: [
           guidedItem("second-reading-listen", "listen", "Listen to the second reading.", {
-            posture: "sit"
+            posture: "sit",
+            dynamicTextKey: "secondReading"
           }),
           guidedItem("second-reading-ending", "listen", "The word of the Lord.", {
             posture: "sit"
@@ -465,7 +502,10 @@ const sectionInputs: SectionInput[] = [
         summary: "We stand to welcome Christ in the Gospel.",
         posture: "stand",
         textBlocks: [
-          textBlock("gospel-acclamation-cantor", "cantor", "The acclamation is sung or proclaimed."),
+          {
+            ...textBlock("gospel-acclamation-cantor", "cantor", "The acclamation is sung or proclaimed."),
+            properKey: "gospelAcclamationVerse"
+          },
           textBlock("gospel-acclamation-you", "you", "The acclamation welcomes Christ present in the Gospel.", companionSource)
         ],
         guidedItems: [
@@ -476,7 +516,8 @@ const sectionInputs: SectionInput[] = [
             posture: "stand"
           }),
           guidedItem("gospel-acclamation-verse", "listen", "Prepare to hear the Gospel.", {
-            posture: "stand"
+            posture: "stand",
+            dynamicTextKey: "gospelAcclamationVerse"
           }),
           guidedItem("gospel-acclamation-repeat", "you_say", "Alleluia.", {
             posture: "stand"
@@ -492,7 +533,10 @@ const sectionInputs: SectionInput[] = [
         summary: "Christ speaks to His Church.",
         posture: "stand",
         textBlocks: [
-          textBlock("gospel-deacon", "deacon", "The deacon proclaims the Gospel when present."),
+          {
+            ...textBlock("gospel-deacon", "deacon", "The deacon proclaims the Gospel when present."),
+            properKey: "gospel"
+          },
           textBlock("gospel-celebrant", "celebrant", "If no deacon is present, the celebrant proclaims the Gospel.")
         ],
         guidedItems: [
@@ -518,7 +562,8 @@ const sectionInputs: SectionInput[] = [
             fullPrayerKey: "response_glory_to_you"
           }),
           guidedItem("gospel-proclamation", "listen", "Listen to the Gospel.", {
-            posture: "stand"
+            posture: "stand",
+            dynamicTextKey: "gospel"
           }),
           guidedItem("gospel-ending-listen", "listen", "The Gospel of the Lord.", {
             posture: "stand"
@@ -561,12 +606,24 @@ const sectionInputs: SectionInput[] = [
           guidedItem("creed-stand", "you_do", "Stand for the Profession of Faith.", {
             posture: "stand"
           }),
-          guidedItem("creed-begin", "you_say", "I believe in one God,", {
+          guidedItem("creed-opening", "you_say", "I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...", {
+            posture: "stand",
+            fullPrayerKey: "nicene_creed"
+          }),
+          guidedItem("creed-christological", "you_say", "I believe in one Lord Jesus Christ...", {
             posture: "stand",
             fullPrayerKey: "nicene_creed"
           }),
           guidedItem("creed-incarnation-bow", "you_do", "Bow at the words of the Incarnation.", {
             posture: "stand"
+          }),
+          guidedItem("creed-paschal", "you_say", "For our sake he was crucified...", {
+            posture: "stand",
+            fullPrayerKey: "nicene_creed"
+          }),
+          guidedItem("creed-spirit-church", "you_say", "I believe in the Holy Spirit...", {
+            posture: "stand",
+            fullPrayerKey: "nicene_creed"
           }),
           guidedItem("creed-amen", "you_say", "Amen.", {
             posture: "stand",
@@ -584,18 +641,14 @@ const sectionInputs: SectionInput[] = [
         posture: "stand",
         textBlocks: [textBlock("universal-prayer-you", "you", "Respond to the prayers of the Church.", companionSource)],
         guidedItems: [
-          guidedItem("universal-prayer-intro", "listen", "The intentions of the Church are announced.", {
+          guidedItem("universal-prayer-intro", "listen", "The Church prays together.", {
             posture: "stand"
           }),
           guidedItem("universal-prayer-response", "you_say", "Lord, hear our prayer.", {
             posture: "stand",
             fullPrayerKey: "response_lord_hear_our_prayer"
           }),
-          guidedItem("universal-prayer-repeat", "you_say", "Repeat the response after each intention.", {
-            posture: "stand",
-            fullPrayerKey: "response_lord_hear_our_prayer"
-          }),
-          guidedItem("universal-prayer-closing", "listen", "The celebrant concludes the prayer.", {
+          guidedItem("universal-prayer-conclusion", "listen", "The priest concludes the prayer.", {
             posture: "stand"
           })
         ],
@@ -647,7 +700,12 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Prayer over Offerings",
         summary: "The celebrant prays over the gifts.",
         posture: "stand",
-        textBlocks: [textBlock("offerings-celebrant", "celebrant", "The celebrant prays over the offerings.")],
+        textBlocks: [
+          {
+            ...textBlock("offerings-celebrant", "celebrant", "The celebrant prays over the offerings."),
+            properKey: "prayerOverOfferings"
+          }
+        ],
         guidedItems: [
           guidedItem("offerings-stand", "you_do", "Stand when invited.", {
             posture: "stand"
@@ -660,7 +718,8 @@ const sectionInputs: SectionInput[] = [
             fullPrayerKey: "response_may_the_lord_accept"
           }),
           guidedItem("offerings-prayer", "listen", "The celebrant prays the Prayer over the Offerings.", {
-            posture: "stand"
+            posture: "stand",
+            dynamicTextKey: "prayerOverOfferings"
           }),
           guidedItem("offerings-amen", "you_say", "Amen.", {
             posture: "stand",
@@ -893,6 +952,10 @@ const sectionInputs: SectionInput[] = [
         summary: "The Lord gives Himself to His Church.",
         posture: "process",
         textBlocks: [
+          {
+            ...textBlock("communion-antiphon", "all", "The Communion Antiphon is sung or proclaimed."),
+            properKey: "communionAntiphon"
+          },
           textBlock("communion-you", "you", "Amen.")
         ],
         guidedItems: [
@@ -913,6 +976,10 @@ const sectionInputs: SectionInput[] = [
             posture: "process",
             fullPrayerKey: "response_amen"
           }),
+          guidedItem("communion-antiphon", "listen", "The Communion Antiphon is sung or proclaimed.", {
+            posture: "sit",
+            dynamicTextKey: "communionAntiphon"
+          }),
           guidedItem("communion-thanksgiving", "ambient", "Return to your place and pray quietly.", {
             posture: "sit",
             durationHint: "Give thanks after Communion."
@@ -927,13 +994,19 @@ const sectionInputs: SectionInput[] = [
         subtitle: "Prayer after Communion",
         summary: "The Church gives thanks for what she has received.",
         posture: "stand",
-        textBlocks: [textBlock("post-communion-celebrant", "celebrant", "The celebrant prays after Communion.")],
+        textBlocks: [
+          {
+            ...textBlock("post-communion-celebrant", "celebrant", "The celebrant prays after Communion."),
+            properKey: "prayerAfterCommunion"
+          }
+        ],
         guidedItems: [
           guidedItem("post-communion-stand", "you_do", "Stand when the celebrant says, Let us pray.", {
             posture: "stand"
           }),
           guidedItem("post-communion-prayer", "listen", "The celebrant prays the Prayer after Communion.", {
-            posture: "stand"
+            posture: "stand",
+            dynamicTextKey: "prayerAfterCommunion"
           }),
           guidedItem("post-communion-amen", "you_say", "Amen.", {
             posture: "stand",
@@ -1188,7 +1261,7 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     guidedItems: [
       branchItem("branch-gospel-ordinary-stand", "you_do", "Stand for the Gospel.", { posture: "stand" }),
       branchItem("branch-gospel-ordinary-alleluia", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" }),
-      branchItem("branch-gospel-ordinary-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-ordinary-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand", dynamicTextKey: "gospelAcclamationVerse" }),
       branchItem("branch-gospel-ordinary-repeat", "you_say", "Alleluia.", { posture: "stand", fullPrayerKey: "response_alleluia" })
     ],
     fullPrayerKeys: ["response_alleluia"]
@@ -1205,7 +1278,7 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
         posture: "stand",
         fullPrayerKey: "response_lent_gospel_acclamation"
       }),
-      branchItem("branch-gospel-lent-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand" }),
+      branchItem("branch-gospel-lent-verse", "listen", "Prepare to hear the Gospel.", { posture: "stand", dynamicTextKey: "gospelAcclamationVerse" }),
       branchItem("branch-gospel-lent-repeat", "you_say", "Praise to you, Lord Jesus Christ, King of endless glory.", {
         posture: "stand",
         fullPrayerKey: "response_lent_gospel_acclamation"
@@ -1220,11 +1293,14 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     replacesStepId: "profession-of-faith",
     guidedItems: [
       branchItem("branch-nicene-stand", "you_do", "Stand for the Profession of Faith.", { posture: "stand" }),
-      branchItem("branch-nicene-begin", "you_say", "I believe in one God,", { posture: "stand", fullPrayerKey: "nicene_creed" }),
+      branchItem("branch-nicene-opening", "you_say", "I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...", { posture: "stand", fullPrayerKey: "nicene_creed" }),
+      branchItem("branch-nicene-christological", "you_say", "I believe in one Lord Jesus Christ...", { posture: "stand", fullPrayerKey: "nicene_creed" }),
       branchItem("branch-nicene-bow", "you_do", "Bow at the words of the Incarnation.", { posture: "stand" }),
+      branchItem("branch-nicene-paschal", "you_say", "For our sake he was crucified...", { posture: "stand", fullPrayerKey: "nicene_creed" }),
+      branchItem("branch-nicene-spirit-church", "you_say", "I believe in the Holy Spirit...", { posture: "stand", fullPrayerKey: "nicene_creed" }),
       branchItem("branch-nicene-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
-    fullPrayerKeys: ["nicene_creed", "response_amen"]
+    fullPrayerKeys: ["nicene_creed"]
   },
   {
     id: "creed-apostles",
@@ -1233,11 +1309,14 @@ export const massFlowBranchGroups: MassFlowBranch[] = [
     replacesStepId: "profession-of-faith",
     guidedItems: [
       branchItem("branch-apostles-stand", "you_do", "Stand for the Profession of Faith.", { posture: "stand" }),
-      branchItem("branch-apostles-begin", "you_say", "I believe in God, the Father almighty,", { posture: "stand", fullPrayerKey: "apostles_creed" }),
+      branchItem("branch-apostles-opening", "you_say", "I believe in God,\nthe Father almighty,\nCreator of heaven and earth...", { posture: "stand", fullPrayerKey: "apostles_creed" }),
+      branchItem("branch-apostles-christological", "you_say", "and in Jesus Christ, his only Son, our Lord...", { posture: "stand", fullPrayerKey: "apostles_creed" }),
       branchItem("branch-apostles-bow", "you_do", "Bow at the words of the Incarnation.", { posture: "stand" }),
+      branchItem("branch-apostles-paschal", "you_say", "suffered under Pontius Pilate...", { posture: "stand", fullPrayerKey: "apostles_creed" }),
+      branchItem("branch-apostles-spirit-church", "you_say", "I believe in the Holy Spirit,\nthe holy catholic Church...", { posture: "stand", fullPrayerKey: "apostles_creed" }),
       branchItem("branch-apostles-amen", "you_say", "Amen.", { posture: "stand", fullPrayerKey: "response_amen" })
     ],
-    fullPrayerKeys: ["apostles_creed", "response_amen"]
+    fullPrayerKeys: ["apostles_creed"]
   },
   ...(["i", "ii", "iii", "iv"] as const).map((number) => ({
     id: `eucharistic-prayer-${number}`,
@@ -1337,6 +1416,14 @@ export function shouldIncludeStandaloneKyrie(form: ResolvedPenitentialActForm): 
 }
 
 export function resolveGloriaStatus(context: MassFlowResolverContext = {}): ResolvedGloriaStatus {
+  if (context.includeGloria === false) {
+    return "omitted";
+  }
+
+  if (context.includeGloria === true) {
+    return "prescribed";
+  }
+
   if (context.gloria) {
     return context.gloria;
   }
@@ -1386,7 +1473,7 @@ export function resolveMassFlowConfiguration(context: MassFlowResolverContext = 
     `gloria-${resolveGloriaStatus(context)}`,
     `eucharistic-prayer-${context.eucharisticPrayer?.replace("ep-", "") ?? "ii"}`,
     gospelAcclamationId,
-    `creed-${context.creed ?? "nicene"}`,
+    context.includeCreed === false ? undefined : `creed-${context.creed ?? "nicene"}`,
     `dismissal-${context.dismissal ?? (context.season === "easter" ? "easter" : "ordinary")}`,
     `blessing-${context.blessing ?? "simple"}`
   ].filter((id): id is string => Boolean(id && getBranch(id)));

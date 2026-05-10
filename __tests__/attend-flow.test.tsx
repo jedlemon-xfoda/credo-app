@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import AttendScreen from "../app/(tabs)/home/attend";
 import { storageKeys } from "../constants/storage";
 import { getAmbientPolicy, getGestureForPage, getVariantRuleForPage, shouldShowFullPrayerAction } from "../data/attendRuntimePolicies";
@@ -83,6 +83,30 @@ function textOrder(first: string, second: string) {
   });
 
   return texts.findIndex((text) => text === first) - texts.findIndex((text) => text === second);
+}
+
+async function renderAttendAt(attendPosition: string) {
+  await AsyncStorage.setItem(
+    storageKeys.dailyJourneyState,
+    JSON.stringify({
+      ...createDefaultJourneyState(getLocalDateKey()),
+      steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+      currentStep: "attend",
+      attendPosition
+    })
+  );
+
+  return render(<AttendScreen />);
+}
+
+function expectRenderedAssetFrameWithin(maxSize: number) {
+  const frame = screen.getByTestId("attend-asset-frame");
+  const style = StyleSheet.flatten(frame.props.style);
+  expect(style.height).toBeLessThanOrEqual(maxSize);
+  expect(style.width).toBeLessThanOrEqual(maxSize);
+  expect(style.maxHeight).toBeLessThanOrEqual(maxSize);
+  expect(style.maxWidth).toBeLessThanOrEqual(maxSize);
+  expect(style.overflow).toBe("hidden");
 }
 
 describe("Attend flow", () => {
@@ -324,7 +348,7 @@ describe("Attend flow", () => {
   it("shows full-prayer actions only for substantial prayer pages", () => {
     expect(shouldShowFullPrayerAction(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-1"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("glory-to-god"), pageFor("glory-to-god", ["gloria-opening"]))).toBe(true);
-    expect(shouldShowFullPrayerAction(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))).toBe(true);
+    expect(shouldShowFullPrayerAction(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-opening"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lords-prayer"), pageFor("lords-prayer", ["lords-prayer-all"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("lamb-of-god"), pageFor("lamb-of-god", ["lamb-first"]))).toBe(true);
     expect(shouldShowFullPrayerAction(stepFor("greeting"), pageFor("greeting", ["greeting-listen", "greeting-response"]))).toBe(true);
@@ -359,7 +383,14 @@ describe("Attend flow", () => {
     expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("penitential-act"), pageFor("penitential-act", ["kyrie-lord-1", "kyrie-christ", "kyrie-lord-2"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("gospel-acclamation"), pageFor("gospel-acclamation", ["gospel-acclamation-alleluia"]))?.groupId).toBe("gospel-acclamation");
-    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-begin"]))?.groupId).toBe("creed");
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-opening"]))?.groupId).toBe("creed");
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-opening"]))?.title).toBe("Which Creed are you hearing?");
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-opening"]))?.options).toEqual([
+      expect.objectContaining({ branchId: "creed-nicene", label: "I believe in one God,", secondaryLabel: "Nicene Creed" }),
+      expect.objectContaining({ branchId: "creed-apostles", label: "I believe in God,", secondaryLabel: "Apostles' Creed" })
+    ]);
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-stand"]))).toBeUndefined();
+    expect(getVariantRuleForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-incarnation-bow"]))).toBeUndefined();
     expect(getVariantRuleForPage(stepFor("preface"), pageFor("preface", ["preface-prayer"]))?.groupId).toBe("eucharistic-prayer");
     expect(getVariantRuleForPage(stepFor("blessing"), pageFor("blessing", ["blessing-dialogue-listen", "blessing-dialogue-response"]))?.groupId).toBe("blessing");
     expect(getVariantRuleForPage(stepFor("dismissal"), pageFor("dismissal", ["dismissal-listen", "dismissal-response"]))?.groupId).toBe("dismissal");
@@ -371,8 +402,8 @@ describe("Attend flow", () => {
   it("provides gesture metadata for major gesture moments", () => {
     expect(getGestureForPage(stepFor("greeting"), pageFor("greeting", ["greeting-sign-cross"]))?.kind).toBe("sign_of_cross");
     expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.kind).toBe("breast_strike");
-    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.assetKey).toBe("gesture.breast_strike.large");
-    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-3"]))?.assetKey).toBe("gesture.breast_strike.small");
+    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-1"]))?.assetKey).toBe("gestures/attend-gesture-strike-breast-default.svg");
+    expect(getGestureForPage(stepFor("penitential-act"), pageFor("penitential-act", ["confiteor-fault-3"]))?.assetKey).toBe("gestures/attend-gesture-strike-breast-default.svg");
     expect(getGestureForPage(stepFor("gospel"), pageFor("gospel", ["gospel-announcement-listen", "gospel-small-crosses", "gospel-announcement-response"]))?.kind).toBe("triple_gospel_cross");
     expect(getGestureForPage(stepFor("profession-of-faith"), pageFor("profession-of-faith", ["creed-incarnation-bow"]))?.kind).toBe("bow");
     expect(getGestureForPage(stepFor("consecration"), pageFor("consecration", ["consecration-host-elevation"]))?.kind).toBe("elevation_host");
@@ -435,6 +466,59 @@ describe("Attend flow", () => {
     expect(shouldShowFullPrayerAction(stepFor("entrance"), pageFor("entrance", ["entrance-ambient"]))).toBe(false);
     expect(stepFor("entrance").posture).toBe("stand");
     expect(stepFor("entrance").guidedItems?.every((item) => item.posture === "stand")).toBe(true);
+  });
+
+  it("keeps rendered Attend production SVG art inside capped visual frames", async () => {
+    const entrance = await renderAttendAt("entrance");
+    await waitFor(() => {
+      expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(96);
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    await waitFor(() => {
+      expect(screen.getByText("The priest and ministers process to the altar.")).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(96);
+    entrance.unmount();
+
+    const penitential = await renderAttendAt("penitential-act");
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    await waitFor(() => {
+      expect(screen.getByText("Pause briefly and ask for mercy.")).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(62);
+    penitential.unmount();
+
+    const breastStrike = await renderAttendAt("penitential-act");
+    await waitFor(() => {
+      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
+    });
+    for (let advanceCount = 0; advanceCount < 7; advanceCount += 1) {
+      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    }
+    await waitFor(() => {
+      expect(screen.getByText("through my fault")).toBeTruthy();
+      expect(screen.getByText("Strike your breast.")).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(96);
+    breastStrike.unmount();
+
+    const gloria = await renderAttendAt("glory-to-god");
+    await waitFor(() => {
+      expect(screen.getByText(/Glory to God in the highest/)).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(78);
+    gloria.unmount();
+
+    await renderAttendAt("collect");
+    await waitFor(() => {
+      expect(screen.getByText("Let us pray.")).toBeTruthy();
+    });
+    expectRenderedAssetFrameWithin(72);
   });
 
   it("resumes persisted attendPosition", async () => {
@@ -680,8 +764,92 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
 
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("I believe in one God,")).toBeTruthy();
+    expect(screen.getByText("I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...")).toBeTruthy();
     expect(screen.getByLabelText("View full prayer")).toBeTruthy();
+  });
+
+  it("keeps the Creed in large doctrinal movement pages without tiny line fragments", async () => {
+    const baseCreedIds = guidedIdsFor("profession-of-faith");
+    const nicene = massFlowBranchGroups.find((branch) => branch.id === "creed-nicene");
+    const apostles = massFlowBranchGroups.find((branch) => branch.id === "creed-apostles");
+
+    expect(baseCreedIds).toEqual(["creed-stand", "creed-opening", "creed-christological", "creed-incarnation-bow", "creed-paschal", "creed-spirit-church", "creed-amen"]);
+    expect(nicene?.guidedItems.map((item) => item.id)).toEqual([
+      "branch-nicene-stand",
+      "branch-nicene-opening",
+      "branch-nicene-christological",
+      "branch-nicene-bow",
+      "branch-nicene-paschal",
+      "branch-nicene-spirit-church",
+      "branch-nicene-amen"
+    ]);
+    expect(apostles?.guidedItems.map((item) => item.id)).toEqual([
+      "branch-apostles-stand",
+      "branch-apostles-opening",
+      "branch-apostles-christological",
+      "branch-apostles-bow",
+      "branch-apostles-paschal",
+      "branch-apostles-spirit-church",
+      "branch-apostles-amen"
+    ]);
+    expect(baseCreedIds.filter((id) => id.includes("bow"))).toHaveLength(1);
+    expect(nicene?.guidedItems.filter((item) => item.text.split("\n").length === 1 && item.text.length < 18 && item.text !== "Amen.")).toEqual([]);
+    expect(apostles?.guidedItems.filter((item) => item.text.split("\n").length === 1 && item.text.length < 18 && item.text !== "Amen.")).toEqual([]);
+  });
+
+  it("switches Creed forms across movement pages and resolves the selected full prayer title", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "profession-of-faith"
+      })
+    );
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Stand for the Profession of Faith.")).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...")).toBeTruthy();
+    expect(screen.getByText("Hearing something different?")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    expect(screen.getByText("Which Creed are you hearing?")).toBeTruthy();
+    expect(screen.getByText("I believe in one God,")).toBeTruthy();
+    expect(screen.getByText("Nicene Creed")).toBeTruthy();
+    expect(screen.getByText("I believe in God,")).toBeTruthy();
+    expect(screen.getByText("Apostles' Creed")).toBeTruthy();
+    expect(screen.getByLabelText("Select Nicene Creed")).toHaveAccessibilityState({ selected: true });
+    fireEvent.press(screen.getByLabelText("Close response options"));
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getByText("Nicene Creed")).toBeTruthy();
+    expect(screen.getByText("the Father almighty,")).toBeTruthy();
+    expect(screen.getByText("of all things visible and invisible.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Hearing something different"));
+    fireEvent.press(screen.getByLabelText("Select Apostles' Creed"));
+    expect(screen.getByText("I believe in God,\nthe Father almighty,\nCreator of heaven and earth...")).toBeTruthy();
+    expect(screen.queryByText("I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...")).toBeNull();
+    fireEvent.press(screen.getByLabelText("View full prayer"));
+    expect(screen.getByText("Apostles' Creed")).toBeTruthy();
+    expect(screen.getByText("Creator of heaven and earth,")).toBeTruthy();
+    expect(screen.getByText("who was conceived by the Holy Spirit,")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Close full prayer"));
+
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("and in Jesus Christ, his only Son, our Lord...")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Bow at the words of the Incarnation.")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("suffered under Pontius Pilate...")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("I believe in the Holy Spirit,\nthe holy catholic Church...")).toBeTruthy();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Amen.")).toBeTruthy();
   });
 
   it("hides View full prayer on posture-only and short response pages in runtime", async () => {
@@ -708,7 +876,7 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
-  it("guides the First Reading with contemplative wording and grouped response", async () => {
+  it("guides the First Reading with resolved reading text and grouped response", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -727,8 +895,9 @@ describe("Attend flow", () => {
     expect(screen.queryByText("A reading from Sacred Scripture is proclaimed.")).toBeNull();
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Listen to the reading.")).toBeTruthy();
-    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    expect(screen.getByText(/Paul reached also Derbe and Lystra/)).toBeTruthy();
+    expect(screen.queryByText("Listen to the reading.")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("The word of the Lord.")).toBeTruthy();
     expect(screen.getByText("Thanks be to God.")).toBeTruthy();
@@ -736,7 +905,7 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
-  it("guides the Psalm response without mechanical wording or unresolved full prayer", async () => {
+  it("guides the Psalm with resolved response and verses", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -750,17 +919,18 @@ describe("Attend flow", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("The psalm response is announced.")).toBeTruthy();
+      expect(screen.getByText("Let all the earth cry out to God with joy.")).toBeTruthy();
     });
-    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    expect(screen.queryByText("The psalm response is announced.")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Repeat the psalm response.")).toBeTruthy();
+    expect(screen.getByText("Let all the earth cry out to God with joy.")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Listen to the psalm verses.")).toBeTruthy();
+    expect(screen.getByText(/Sing joyfully to the Lord/)).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Join in the response.")).toBeTruthy();
+    expect(screen.getByText("Let all the earth cry out to God with joy.")).toBeTruthy();
     expect(screen.queryByText("Repeat the response when it returns.")).toBeNull();
-    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
   });
 
   it("keeps Second Reading conditional scaffolding and grouped response without unresolved full prayer", async () => {
@@ -791,7 +961,36 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
   });
 
-  it("guides the Gospel Acclamation as stand, acclamation, verse placeholder, acclamation", async () => {
+  it("guides the Universal Prayer with simplified intro, response, and priest conclusion", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "universal-prayer"
+      })
+    );
+
+    expect(guidedIdsFor("universal-prayer")).toEqual(["universal-prayer-intro", "universal-prayer-response", "universal-prayer-conclusion"]);
+
+    render(<AttendScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByText("The Church prays together.")).toBeTruthy();
+    });
+    expect(screen.queryByText("The intentions of the Church are announced.")).toBeNull();
+    expect(screen.queryByText("Repeat the response after each intention.")).toBeNull();
+    expect(screen.queryByText("The celebrant concludes the prayer.")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("Lord, hear our prayer.")).toBeTruthy();
+    expect(screen.queryByText("Repeat the response after each intention.")).toBeNull();
+    expect(screen.queryByText("The celebrant concludes the prayer.")).toBeNull();
+    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
+    expect(screen.getByText("The priest concludes the prayer.")).toBeTruthy();
+  });
+
+  it("guides the Gospel Acclamation as stand, acclamation, resolved verse, acclamation", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -813,8 +1012,9 @@ describe("Attend flow", () => {
     expect(screen.getByText("Hearing something different?")).toBeTruthy();
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Prepare to hear the Gospel.")).toBeTruthy();
+    expect(screen.getByText(/If then you were raised with Christ/)).toBeTruthy();
     expect(screen.queryByText("Listen to the Gospel acclamation verse.")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("Alleluia.")).toBeTruthy();
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
@@ -865,10 +1065,11 @@ describe("Attend flow", () => {
       expect(screen.getByText("Stand for the Profession of Faith.")).toBeTruthy();
     });
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("I believe in one God,")).toBeTruthy();
+    expect(screen.getByText("I believe in one God,\nthe Father almighty,\nmaker of heaven and earth...")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("View full prayer"));
     expect(screen.getByLabelText("Close full prayer")).toBeTruthy();
-    expect(screen.getAllByText("I believe in one God,").length).toBeGreaterThan(1);
+    expect(screen.getByText("Nicene Creed")).toBeTruthy();
+    expect(screen.getByText("I believe in one God,")).toBeTruthy();
   });
 
   it("shows Penitential Act variants only after the shared opening and keeps Confiteor full prayer available", async () => {
@@ -1039,7 +1240,7 @@ describe("Attend flow", () => {
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.queryByText("Which Kyrie are you hearing?")).toBeNull();
     expect(screen.queryByText("The Kyrie may be sung or spoken.")).toBeNull();
-    expect(screen.getByText("Glory to God")).toBeTruthy();
+    expect(screen.getByText("Collect")).toBeTruthy();
   });
 
   it("shows complete Kyrie Tropes call and response in the full-prayer overlay", async () => {
@@ -1124,23 +1325,11 @@ describe("Attend flow", () => {
         ...createDefaultJourneyState(getLocalDateKey()),
         steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
         currentStep: "attend",
-        attendPosition: "penitential-act"
+        attendPosition: "glory-to-god"
       })
     );
 
     render(<AttendScreen />);
-
-    await waitFor(() => {
-      expect(screen.getByText("Brethren, let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.")).toBeTruthy();
-    });
-    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    fireEvent.press(screen.getByLabelText("Hearing something different"));
-    fireEvent.press(screen.getByLabelText("Select You were sent to heal the contrite of heart..."));
-
-    for (let count = 0; count < 4; count += 1) {
-      fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    }
 
     await waitFor(() => {
       expect(screen.getByText("Glory to God in the highest,\nand on earth peace to people of good will.")).toBeTruthy();
@@ -1194,7 +1383,7 @@ describe("Attend flow", () => {
     expect(shouldShowFullPrayerAction({ ...gloria, guidedItems: omitted?.guidedItems ?? [] }, { id: "gloria-omitted-page", items: omitted?.guidedItems ?? [] })).toBe(false);
   });
 
-  it("splits Collect into invitation, silent prayer, Collect, and Amen without unresolved full prayer", async () => {
+  it("splits Collect into invitation, silent prayer, resolved Collect, and Amen", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -1216,9 +1405,9 @@ describe("Attend flow", () => {
     expect(screen.getByText("AMBIENT")).toBeTruthy();
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("The priest prays the Collect.")).toBeTruthy();
+    expect(screen.getByText(/Almighty and eternal God/)).toBeTruthy();
     expect(screen.getByText("Amen.")).toBeTruthy();
-    expect(screen.queryByLabelText("View full prayer")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
   });
 
   it("shows canonical Gospel dialogue, gesture, and ending responses", async () => {
@@ -1257,8 +1446,10 @@ describe("Attend flow", () => {
     expect(screen.queryByLabelText("View full prayer")).toBeNull();
 
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
-    expect(screen.getByText("Listen to the Gospel.")).toBeTruthy();
+    expect(screen.getByText(/Jesus said to his disciples/)).toBeTruthy();
     expect(screen.queryByText("The Gospel is proclaimed.")).toBeNull();
+    expect(screen.queryByText("Listen to the Gospel.")).toBeNull();
+    expect(screen.getByLabelText("View full prayer")).toBeTruthy();
     fireEvent.press(screen.getByLabelText("Advance guided Mass moment"));
     expect(screen.getByText("The Gospel of the Lord.")).toBeTruthy();
     expect(screen.getByText("Praise to you, Lord Jesus Christ.")).toBeTruthy();

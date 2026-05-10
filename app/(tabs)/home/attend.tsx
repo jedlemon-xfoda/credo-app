@@ -5,12 +5,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SourceBadge } from "../../../components/SourceBadge";
+import { AttendAssetImage, attendAssetSources } from "../../../components/attend/AttendAssets";
 import { AttendDock, AttendSheet, GuidanceChip, PostureBadge, PostureGlyphIcon, ProgressDots, SacredDivider } from "../../../components/attend/AttendPrimitives";
 import { attendColors as attendPalette, attendSpacing, attendTypography } from "../../../constants/attendTheme";
 import { colors, spacing } from "../../../constants/theme";
 import { getGuidedPagePolicy, type AmbientPolicy, type GestureMetadata, type VariantOption, type VariantRule } from "../../../data/attendRuntimePolicies";
+import { liturgicalDayToMassFlowContext } from "../../../data/liturgicalCalendar";
 import { labelPosture, massFlowBranchGroups, massFlowSections, massFlowSteps } from "../../../data/massFlow";
 import { useDailyJourney } from "../../../hooks/useDailyJourney";
+import { useLiturgicalDay } from "../../../hooks/useLiturgicalDay";
+import { useMassPropers } from "../../../hooks/useMassPropers";
+import { getProperText, isProperAvailableForRuntime, shouldAllowReviewOnlyMassContent, type DayMassPropers } from "../../../services/massProperResolver";
 import type { MassFlowStep, MassGuidedItem, MassTextBlock } from "../../../types";
 
 type AttendMode = "guided" | "quiet";
@@ -24,6 +29,11 @@ type GuidedPage = {
 
 export default function AttendScreen() {
   const { state, ready, markStepStarted, markStepComplete, restartAttend, setAttendPosition } = useDailyJourney();
+  const liturgicalDay = useLiturgicalDay();
+  const dayPropers = useMassPropers(liturgicalDay);
+  const allowReviewOnlyContent = shouldAllowReviewOnlyContent();
+  const massFlowContext = useMemo(() => liturgicalDayToMassFlowContext(liturgicalDay), [liturgicalDay]);
+  const activeMassFlowSteps = useMemo(() => getActiveMassFlowSteps(massFlowContext, state?.attendPosition), [massFlowContext, state?.attendPosition]);
   const [index, setIndex] = useState(0);
   const [guidedIndex, setGuidedIndex] = useState(0);
   const [lostOpen, setLostOpen] = useState(false);
@@ -38,19 +48,21 @@ export default function AttendScreen() {
   const [selectedVariantValue, setSelectedVariantValue] = useState("And with your spirit.");
   const [selectedPenitentialBranchId, setSelectedPenitentialBranchId] = useState("penitential-confiteor");
   const [selectedStandaloneKyrieBranchId, setSelectedStandaloneKyrieBranchId] = useState("standalone-kyrie-english");
+  const [selectedCreedBranchId, setSelectedCreedBranchId] = useState("creed-nicene");
   const resumed = useRef(false);
   const isExitingRef = useRef(false);
   const suppressPositionPersist = useRef(false);
-  const step = massFlowSteps[index];
+  const step = activeMassFlowSteps[index] ?? activeMassFlowSteps[0] ?? massFlowSteps[0];
   const effectiveStep = useMemo(
-    () => getEffectiveAttendStep(step, selectedPenitentialBranchId, selectedStandaloneKyrieBranchId),
-    [selectedPenitentialBranchId, selectedStandaloneKyrieBranchId, step]
+    () => getEffectiveAttendStep(step, selectedPenitentialBranchId, selectedStandaloneKyrieBranchId, selectedCreedBranchId),
+    [selectedCreedBranchId, selectedPenitentialBranchId, selectedStandaloneKyrieBranchId, step]
   );
   const guidedItems = effectiveStep.guidedItems ?? [];
   const guidedPages = useMemo(() => buildGuidedPages(effectiveStep), [effectiveStep]);
   const hasGuidedItems = guidedPages.length > 0;
   const guidedPage = guidedPages[guidedIndex];
   const guidedPagePolicy = useMemo(() => (guidedPage ? getGuidedPagePolicy(effectiveStep, guidedPage) : undefined), [effectiveStep, guidedPage]);
+  const showFullPrayer = Boolean(guidedPagePolicy?.showFullPrayer || hasResolvedProperForPage(effectiveStep, guidedPage, dayPropers, allowReviewOnlyContent));
   const finalStep = effectiveStep.id === "dismissal";
 
   useEffect(() => {
@@ -73,6 +85,12 @@ export default function AttendScreen() {
   }, [guidedIndex, guidedPages.length]);
 
   useEffect(() => {
+    if (index >= activeMassFlowSteps.length && activeMassFlowSteps.length > 0) {
+      setIndex(activeMassFlowSteps.length - 1);
+    }
+  }, [activeMassFlowSteps.length, index]);
+
+  useEffect(() => {
     if (ready && !isExitingRef.current) {
       markStepStarted("attend");
     }
@@ -89,11 +107,11 @@ export default function AttendScreen() {
       return;
     }
 
-    const savedIndex = massFlowSteps.findIndex((item) => item.id === state?.attendPosition);
+    const savedIndex = activeMassFlowSteps.findIndex((item) => item.id === state?.attendPosition);
     if (savedIndex >= 0) {
       setIndex(savedIndex);
     }
-  }, [ready, state?.attendPosition, state?.steps.attend]);
+  }, [activeMassFlowSteps, ready, state?.attendPosition, state?.steps.attend]);
 
   useEffect(() => {
     if (isExitingRef.current || suppressPositionPersist.current) {
@@ -109,9 +127,9 @@ export default function AttendScreen() {
     () =>
       massFlowSections.map((section) => ({
         section: section.title,
-        steps: section.steps
+        steps: section.steps.filter((candidate) => activeMassFlowSteps.some((active) => active.id === candidate.id))
       })),
-    []
+    [activeMassFlowSteps]
   );
 
   const previous = useCallback(() => {
@@ -129,10 +147,10 @@ export default function AttendScreen() {
     setGuidedIndex(0);
     setIndex((current) => {
       const nextIndex = Math.max(0, current - 1);
-      setAttendPosition(massFlowSteps[nextIndex].id);
+      setAttendPosition(activeMassFlowSteps[nextIndex].id);
       return nextIndex;
     });
-  }, [guidedIndex, hasGuidedItems, setAttendPosition]);
+  }, [activeMassFlowSteps, guidedIndex, hasGuidedItems, setAttendPosition]);
 
   const handleCompleteAttend = useCallback(async () => {
     if (isExitingRef.current) {
@@ -164,11 +182,11 @@ export default function AttendScreen() {
     setFullPrayerNotice(false);
     setGuidedIndex(0);
     setIndex((current) => {
-      const nextIndex = Math.min(massFlowSteps.length - 1, current + 1);
-      setAttendPosition(massFlowSteps[nextIndex].id);
+      const nextIndex = Math.min(activeMassFlowSteps.length - 1, current + 1);
+      setAttendPosition(activeMassFlowSteps[nextIndex].id);
       return nextIndex;
     });
-  }, [finalStep, guidedIndex, guidedPages.length, handleCompleteAttend, hasGuidedItems, setAttendPosition]);
+  }, [activeMassFlowSteps, finalStep, guidedIndex, guidedPages.length, handleCompleteAttend, hasGuidedItems, setAttendPosition]);
 
   const tapToAdvance = useCallback(() => {
     if (paused || !hasGuidedItems) {
@@ -182,7 +200,7 @@ export default function AttendScreen() {
       if (isExitingRef.current) {
         return;
       }
-      const nextIndex = massFlowSteps.findIndex((item) => item.id === id);
+      const nextIndex = activeMassFlowSteps.findIndex((item) => item.id === id);
       if (nextIndex >= 0) {
         suppressPositionPersist.current = false;
         setIndex(nextIndex);
@@ -194,7 +212,7 @@ export default function AttendScreen() {
       setMoreOpen(false);
       setVariantOpen(false);
     },
-    [setAttendPosition]
+    [activeMassFlowSteps, setAttendPosition]
   );
 
   async function restartMass() {
@@ -205,13 +223,14 @@ export default function AttendScreen() {
     suppressPositionPersist.current = false;
     await restartAttend();
     await markStepStarted("attend");
-    await setAttendPosition(massFlowSteps[0].id);
+    await setAttendPosition(activeMassFlowSteps[0]?.id ?? massFlowSteps[0].id);
     setIndex(0);
     setGuidedIndex(0);
     setSelectedGreetingText("The Lord be with you.");
     setSelectedGreetingResponse("And with your spirit.");
     setSelectedPenitentialBranchId("penitential-confiteor");
     setSelectedStandaloneKyrieBranchId("standalone-kyrie-english");
+    setSelectedCreedBranchId("creed-nicene");
     setFullPrayerNotice(false);
     setLostOpen(false);
     setMoreOpen(false);
@@ -253,6 +272,8 @@ export default function AttendScreen() {
             onTap={tapToAdvance}
             page={guidedPage}
             paused={paused}
+            allowReviewOnlyContent={allowReviewOnlyContent}
+            dayPropers={dayPropers}
             greetingTextOverride={selectedGreetingText}
             responseOverride={selectedGreetingResponse}
             step={effectiveStep}
@@ -276,7 +297,7 @@ export default function AttendScreen() {
             <Text style={styles.subsection}>{step.subtitle}</Text>
             <Text style={styles.title}>{step.title}</Text>
             {labelPosture(step.posture) ? <Text style={styles.posture}>{labelPosture(step.posture)?.toUpperCase()}</Text> : null}
-            {mode !== "quiet" ? <MassTextBlocks blocks={step.textBlocks} /> : null}
+            {mode !== "quiet" ? <MassTextBlocks allowReviewOnlyContent={allowReviewOnlyContent} blocks={step.textBlocks} dayPropers={dayPropers} /> : null}
           </View>
 
           {mode === "guided" && step.guidance ? (
@@ -319,7 +340,7 @@ export default function AttendScreen() {
               <Pressable accessibilityLabel={paused ? "Resume guided flow" : "Pause guided flow"} accessibilityRole="button" onPress={() => setPaused((value) => !value)} style={styles.footerTool}>
                 <Text style={styles.footerToolText}>{paused ? "Resume" : "Pause"}</Text>
               </Pressable>
-              {guidedPagePolicy?.showFullPrayer ? (
+              {showFullPrayer ? (
                 <Pressable
                   accessibilityLabel="View full prayer"
                   accessibilityRole="button"
@@ -356,11 +377,14 @@ export default function AttendScreen() {
               } else if (guidedPagePolicy?.variantGroup?.groupId === "standalone-kyrie" && option.branchId) {
                 setSelectedStandaloneKyrieBranchId(option.branchId);
                 setSelectedVariantValue(option.branchId);
+              } else if (guidedPagePolicy?.variantGroup?.groupId === "creed" && option.branchId) {
+                setSelectedCreedBranchId(option.branchId);
+                setSelectedVariantValue(option.branchId);
               }
               setVariantOpen(false);
             }}
             rule={guidedPagePolicy?.variantGroup}
-            selected={selectedVariantValue}
+            selected={guidedPagePolicy?.variantGroup?.groupId === "creed" ? selectedCreedBranchId : selectedVariantValue}
           />
         ) : null}
         {fullPrayerNotice ? (
@@ -368,6 +392,8 @@ export default function AttendScreen() {
             item={guidedPage?.items.find((item) => item.fullPrayerKey) ?? guidedPage?.items[0]}
             onClose={() => setFullPrayerNotice(false)}
             greetingTextOverride={selectedGreetingText}
+            dayPropers={dayPropers}
+            allowReviewOnlyContent={allowReviewOnlyContent}
             responseOverride={selectedGreetingResponse}
             step={effectiveStep}
           />
@@ -379,11 +405,20 @@ export default function AttendScreen() {
   );
 }
 
-function getEffectiveAttendStep(step: MassFlowStep, penitentialBranchId: string, standaloneKyrieBranchId: string): MassFlowStep {
+function getEffectiveAttendStep(step: MassFlowStep, penitentialBranchId: string, standaloneKyrieBranchId: string, creedBranchId: string): MassFlowStep {
+  if (step.id === "profession-of-faith") {
+    const creedBranch =
+      massFlowBranchGroups.find((branch) => branch.id === creedBranchId && branch.kind === "creed") ?? massFlowBranchGroups.find((branch) => branch.id === "creed-nicene");
+
+    return {
+      ...step,
+      guidedItems: creedBranch?.guidedItems ?? step.guidedItems
+    };
+  }
+
   if (step.id !== "penitential-act") {
     return step;
   }
-
   const penitentialBranch =
     massFlowBranchGroups.find((branch) => branch.id === penitentialBranchId && branch.kind === "penitential_act") ??
     massFlowBranchGroups.find((branch) => branch.id === "penitential-confiteor");
@@ -400,6 +435,32 @@ function getEffectiveAttendStep(step: MassFlowStep, penitentialBranchId: string,
     ...step,
     guidedItems
   };
+}
+
+function getActiveMassFlowSteps(context: ReturnType<typeof liturgicalDayToMassFlowContext>, forcedStepId?: string) {
+  return massFlowSteps.filter((candidate) => {
+    if (candidate.id === forcedStepId) {
+      return true;
+    }
+
+    if (candidate.id === "glory-to-god" && context.gloria === "omitted") {
+      return false;
+    }
+
+    if (candidate.id === "profession-of-faith" && context.includeCreed === false) {
+      return false;
+    }
+
+    if (candidate.id === "second-reading" && !context.hasSecondReading) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function shouldAllowReviewOnlyContent() {
+  return shouldAllowReviewOnlyMassContent();
 }
 
 function buildGuidedPages(step: MassFlowStep): GuidedPage[] {
@@ -561,6 +622,8 @@ function getCadenceGroup(stepId: string, itemId: string) {
 }
 
 function GuidedMoment({
+  allowReviewOnlyContent,
+  dayPropers,
   currentIndex,
   onTap,
   page,
@@ -577,6 +640,8 @@ function GuidedMoment({
   gesture,
   ambientPolicy
 }: {
+  allowReviewOnlyContent: boolean;
+  dayPropers: DayMassPropers;
   currentIndex: number;
   onTap: () => void;
   page: GuidedPage;
@@ -595,7 +660,7 @@ function GuidedMoment({
 }) {
   const primaryItem = page.items[0];
   const artItem = page.artItem ?? primaryItem;
-  const artPresent = hasArtForPage(artItem, step);
+  const artPresent = hasArtForPage(artItem, step, gesture);
   const posture = labelPosture(primaryItem.posture ?? step.posture);
   void gesture;
   void ambientPolicy;
@@ -622,11 +687,11 @@ function GuidedMoment({
 
       <Text style={[styles.guidedTitle, !artPresent && styles.guidedTitleCompact]}>{step.title}</Text>
       <View style={styles.guidedCenter}>
-        <MomentArt item={artItem} step={step} />
+        <MomentArt gesture={gesture} item={artItem} step={step} />
         {shouldShowDivider(primaryItem, step) && page.items.length === 1 ? <SacredDivider /> : null}
         <View style={[styles.guidedBeatGroup, !artPresent && styles.guidedBeatGroupCompact]}>
           {page.items.map((item, itemIndex) => {
-            const displayText = getGuidedDisplayText(item, greetingTextOverride, responseOverride);
+            const displayText = getGuidedDisplayText(item, greetingTextOverride, responseOverride, dayPropers, allowReviewOnlyContent);
             return (
               <View key={item.id} style={styles.guidedBeat}>
                 {itemIndex > 0 ? <SacredDivider style={styles.groupDivider} /> : null}
@@ -702,13 +767,18 @@ function ReferenceRow({ label, text, type }: { label: string; text: string; type
   );
 }
 
-function getGuidedDisplayText(item: MassGuidedItem, greetingTextOverride: string, responseOverride: string) {
+function getGuidedDisplayText(item: MassGuidedItem, greetingTextOverride: string, responseOverride: string, dayPropers?: DayMassPropers, allowReviewOnlyContent = false) {
   if (item.id === "greeting-listen") {
     return greetingTextOverride;
   }
 
   if (item.id === "greeting-response") {
     return responseOverride;
+  }
+
+  const proper = getProperText(dayPropers, item.dynamicTextKey);
+  if (isProperAvailableForRuntime(proper, allowReviewOnlyContent)) {
+    return proper.text;
   }
 
   return item.text;
@@ -745,13 +815,27 @@ function VariantOverlay({
         </Pressable>
       </View>
       <View style={styles.variantOptions}>
-        {options.map((option) => (
-          <Pressable accessibilityLabel={`Select ${option.label}`} accessibilityRole="button" key={option.id} onPress={() => onSelect(option)} style={styles.variantOption}>
+        {options.map((option) => {
+          const optionValue = option.branchId ?? option.responseText ?? option.label;
+          const selectedOption = selected === optionValue;
+          return (
+          <Pressable
+            accessibilityLabel={`Select ${option.secondaryLabel ?? option.label}`}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedOption }}
+            key={option.id}
+            onPress={() => onSelect(option)}
+            style={styles.variantOption}
+          >
             <SpeakerIcon />
-            <Text style={styles.variantOptionText}>{option.label}</Text>
-            {selected === (option.responseText ?? option.label) ? <CheckIcon /> : null}
+            <View>
+              <Text style={styles.variantOptionText}>{option.label}</Text>
+              {option.secondaryLabel ? <Text style={styles.variantOptionText}>{option.secondaryLabel}</Text> : null}
+            </View>
+            {selectedOption ? <CheckIcon /> : null}
           </Pressable>
-        ))}
+          );
+        })}
       </View>
       <Pressable accessibilityLabel="I'm not sure" accessibilityRole="button" onPress={onClose} style={styles.notSureAction}>
         <Text style={styles.notSureText}>I'm not sure</Text>
@@ -761,19 +845,27 @@ function VariantOverlay({
 }
 
 function FullPrayerSheet({
+  allowReviewOnlyContent,
+  dayPropers,
   greetingTextOverride,
   item,
   onClose,
   responseOverride,
   step
 }: {
+  allowReviewOnlyContent: boolean;
+  dayPropers: DayMassPropers;
   item?: MassGuidedItem;
   onClose: () => void;
   greetingTextOverride: string;
   responseOverride: string;
   step: MassFlowStep;
 }) {
-  const fullPrayer = getFullPrayerContent(step, item, greetingTextOverride, responseOverride);
+  const fullPrayer = getFullPrayerContent(step, item, greetingTextOverride, responseOverride, dayPropers, allowReviewOnlyContent);
+
+  if (!fullPrayer) {
+    return null;
+  }
 
   return (
     <AttendSheet>
@@ -823,26 +915,15 @@ function MoreIcon() {
 }
 
 function SpeakerIcon() {
-  return (
-    <View style={styles.speakerIcon}>
-      <View style={styles.speakerBox} />
-      <View style={styles.speakerCone} />
-      <View style={styles.speakerWave} />
-    </View>
-  );
+  return <AttendAssetImage color="rgba(29, 46, 68, 0.54)" label="Audio" source={attendAssetSources.icons.speaker} style={styles.sheetIconAsset} />;
 }
 
 function CloseIcon() {
-  return (
-    <View style={styles.closeIcon}>
-      <View style={[styles.closeStroke, styles.closeOne]} />
-      <View style={[styles.closeStroke, styles.closeTwo]} />
-    </View>
-  );
+  return <AttendAssetImage color="rgba(29, 46, 68, 0.56)" label="Close" source={attendAssetSources.icons.close} style={styles.closeIconAsset} />;
 }
 
 function CheckIcon() {
-  return <View style={styles.checkIcon} />;
+  return <AttendAssetImage color={attendPalette.deepNavy} label="Selected" source={attendAssetSources.icons.check} style={styles.checkIconAsset} />;
 }
 
 function PostureIcon({ posture }: { posture?: MassFlowStep["posture"] | MassGuidedItem["posture"] }) {
@@ -860,40 +941,46 @@ function PostureIcon({ posture }: { posture?: MassFlowStep["posture"] | MassGuid
   );
 }
 
-function MomentArt({ item, step }: { item: MassGuidedItem; step: MassFlowStep }) {
+function MomentArt({ gesture, item, step }: { gesture?: GestureMetadata; item: MassGuidedItem; step: MassFlowStep }) {
   if (item.id === "greeting-sign-cross") {
     return null;
   }
 
+  const gestureSource = getGestureAssetSource(gesture);
+  if (gestureSource) {
+    return <AttendAssetImage label={gesture?.cadenceLabel} source={gestureSource} style={styles.gestureAsset} />;
+  }
+
   if (item.id.includes("sign-cross")) {
-    return <GestureArt variant="sign" />;
+    return <AttendAssetImage label="Sign of the Cross" source={attendAssetSources.gestures.signCross} style={styles.gestureAsset} />;
   }
 
   if (item.cadenceCue) {
-    return <GestureArt variant="breast" />;
+    return <AttendAssetImage label="Strike breast" source={attendAssetSources.gestures.strikeBreast} style={styles.gestureAsset} />;
   }
 
   if (step.id === "entrance") {
-    return <LyreArt />;
+    return <AttendAssetImage color={attendPalette.mutedGold} label="Entrance chant" source={attendAssetSources.liturgical.lyreWinged} style={styles.liturgicalAsset} />;
   }
 
   if (item.id.includes("gloria")) {
-    return <SunburstArt />;
+    return <AttendAssetImage color={attendPalette.mutedGold} label="Gloria" source={attendAssetSources.icons.sunburst} style={styles.ornamentAsset} />;
   }
 
   if (step.id === "collect") {
-    return <ChaliceArt />;
+    return <AttendAssetImage color={attendPalette.mutedGold} label="Collect" source={attendAssetSources.liturgical.chalice} style={styles.liturgicalAsset} />;
   }
 
   if (step.id === "penitential-act" && item.guidanceType === "ambient") {
-    return <SmallCrossArt />;
+    return <AttendAssetImage color={attendPalette.mutedGold} label="Penitential cross" source={attendAssetSources.icons.crossPenitential} style={styles.smallCrossAsset} />;
   }
 
   return null;
 }
 
-function hasArtForPage(item: MassGuidedItem, step: MassFlowStep): boolean {
+function hasArtForPage(item: MassGuidedItem, step: MassFlowStep, gesture?: GestureMetadata): boolean {
   if (item.id === "greeting-sign-cross") return false;
+  if (getGestureAssetSource(gesture)) return true;
   if (item.id.includes("sign-cross")) return true;
   if (item.cadenceCue) return true;
   if (step.id === "entrance") return true;
@@ -903,66 +990,49 @@ function hasArtForPage(item: MassGuidedItem, step: MassFlowStep): boolean {
   return false;
 }
 
-function LyreArt() {
-  return (
-    <View style={styles.lyreRow}>
-      <View style={styles.lyreLineLeft} />
-      <View style={styles.artWrap}>
-        <View style={styles.lyreArc} />
-        <View style={styles.lyreStringOne} />
-        <View style={styles.lyreStringTwo} />
-        <View style={styles.lyreStringThree} />
-      </View>
-      <View style={styles.lyreLineRight} />
-    </View>
-  );
+function getGestureAssetSource(gesture?: GestureMetadata) {
+  switch (gesture?.kind) {
+    case "sign_of_cross":
+    case "triple_gospel_cross":
+      return attendAssetSources.gestures.signCross;
+    case "breast_strike":
+      return attendAssetSources.gestures.strikeBreast;
+    case "bow":
+      return attendAssetSources.gestures.bowing;
+    case "procession":
+      return attendAssetSources.gestures.procession;
+    case "elevation_host":
+      return attendAssetSources.liturgical.hostEucharist;
+    case "elevation_chalice":
+      return attendAssetSources.liturgical.chalice;
+    default:
+      return undefined;
+  }
 }
 
-function GestureArt({ variant }: { variant: "sign" | "breast" }) {
-  return (
-    <View style={styles.gestureArt}>
-      <View style={styles.gestureHead} />
-      <View style={styles.gestureBody} />
-      <View style={[styles.gestureArm, variant === "sign" ? styles.gestureArmSign : styles.gestureArmBreast]} />
-      <View style={styles.gestureHand} />
-    </View>
-  );
+function resolveMassTextBlockWithPropers(block: MassTextBlock, dayPropers: DayMassPropers, allowReviewOnlyContent: boolean): MassTextBlock {
+  const proper = getProperText(dayPropers, block.properKey);
+  if (isProperAvailableForRuntime(proper, allowReviewOnlyContent)) {
+    return {
+      ...block,
+      text: [proper.text, proper.citation].filter(Boolean).join("\n")
+    };
+  }
+
+  return resolveMassTextBlock(block, MASS_CONTENT);
 }
 
-function SmallCrossArt() {
-  return (
-    <View style={styles.smallCrossArt}>
-      <CrossIcon />
-    </View>
-  );
+function hasResolvedProperForPage(step: MassFlowStep, page: GuidedPage | undefined, dayPropers: DayMassPropers, allowReviewOnlyContent: boolean) {
+  if (!page) {
+    return false;
+  }
+
+  return page.items.some((item) => isProperAvailableForRuntime(getProperText(dayPropers, item.dynamicTextKey), allowReviewOnlyContent));
 }
 
-function SunburstArt() {
-  return (
-    <View style={styles.sunburstArt}>
-      <View style={styles.sunCircle} />
-      {Array.from({ length: 8 }).map((_, index) => (
-        <View key={`sun-ray-${index}`} style={[styles.sunRay, { transform: [{ rotate: `${index * 45}deg` }] }]} />
-      ))}
-    </View>
-  );
-}
+function MassTextBlocks({ allowReviewOnlyContent, blocks, dayPropers }: { allowReviewOnlyContent: boolean; blocks: MassTextBlock[]; dayPropers: DayMassPropers }) {
 
-function ChaliceArt() {
-  return (
-    <View style={styles.chaliceArt}>
-      <View style={styles.chaliceCup} />
-      <View style={styles.chaliceStem} />
-      <View style={styles.chaliceBase} />
-    </View>
-  );
-}
-
-function MassTextBlocks({ blocks }: { blocks: MassTextBlock[] }) {
-
-  const resolvedBlocks = blocks.map((block) =>
-    resolveMassTextBlock(block, MASS_CONTENT)
-  );
+  const resolvedBlocks = blocks.map((block) => resolveMassTextBlockWithPropers(block, dayPropers, allowReviewOnlyContent));
 
   const visibleBlocks = resolvedBlocks.filter((block) => block.text.trim().length > 0);
 
@@ -1109,13 +1179,28 @@ function getPageDurationHint(page: GuidedPage) {
   return page.items.find((item) => item.durationHint)?.durationHint;
 }
 
-function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefined, greetingTextOverride: string, responseOverride: string) {
+function getFullPrayerContent(
+  step: MassFlowStep,
+  item: MassGuidedItem | undefined,
+  greetingTextOverride: string,
+  responseOverride: string,
+  dayPropers: DayMassPropers,
+  allowReviewOnlyContent: boolean
+) {
   const currentKey = item?.fullPrayerKey;
   const keyContent = currentKey ? MASS_CONTENT[currentKey] : undefined;
   const resolvedBlocks = step.textBlocks
-    .map((block) => resolveMassTextBlock(block, MASS_CONTENT))
+    .map((block) => resolveMassTextBlockWithPropers(block, dayPropers, allowReviewOnlyContent))
     .map((block) => block.text.trim())
     .filter(Boolean);
+  const dynamicProper = getProperText(dayPropers, item?.dynamicTextKey) ?? step.textBlocks.map((block) => getProperText(dayPropers, block.properKey)).find((proper) => proper?.status === "available");
+
+  if (isProperAvailableForRuntime(dynamicProper, allowReviewOnlyContent)) {
+    return {
+      title: dynamicProper.title,
+      lines: splitTextLines([dynamicProper.text, dynamicProper.citation].filter(Boolean).join("\n"))
+    };
+  }
 
   if (currentKey === "penitential_dialogue" || currentKey === "penitential_tropes") {
     const groupedLines = getGuidedFullPrayerLines(step, currentKey, greetingTextOverride, responseOverride);
@@ -1148,7 +1233,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
 
   if (keyContent) {
     return {
-      title: step.title,
+      title: getFullPrayerTitleForKey(currentKey, step.title),
       lines: splitTextLines(keyContent)
     };
   }
@@ -1174,7 +1259,7 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
   if (step.guidedItems && step.guidedItems.length > 0) {
     return {
       title: step.title,
-      lines: step.guidedItems.map((guidedItem) => getGuidedDisplayText(guidedItem, greetingTextOverride, responseOverride))
+      lines: step.guidedItems.map((guidedItem) => getGuidedDisplayText(guidedItem, greetingTextOverride, responseOverride, dayPropers, allowReviewOnlyContent))
     };
   }
 
@@ -1182,6 +1267,17 @@ function getFullPrayerContent(step: MassFlowStep, item: MassGuidedItem | undefin
     title: step.title,
     lines: [step.summary, step.guidance].filter((line): line is string => Boolean(line))
   };
+}
+
+function getFullPrayerTitleForKey(key: string | undefined, fallbackTitle: string) {
+  switch (key) {
+    case "nicene_creed":
+      return "Nicene Creed";
+    case "apostles_creed":
+      return "Apostles' Creed";
+    default:
+      return fallbackTitle;
+  }
 }
 
 function getGuidedFullPrayerLines(step: MassFlowStep, currentKey: string, greetingTextOverride: string, responseOverride: string) {
@@ -2012,6 +2108,12 @@ const styles = StyleSheet.create({
     position: "relative",
     width: 28
   },
+  sheetIconAsset: {
+    height: 24,
+    maxHeight: 24,
+    maxWidth: 28,
+    width: 28
+  },
   speakerBox: {
     backgroundColor: "rgba(29, 46, 68, 0.54)",
     height: 10,
@@ -2049,6 +2151,12 @@ const styles = StyleSheet.create({
     position: "relative",
     width: 18
   },
+  closeIconAsset: {
+    height: 18,
+    maxHeight: 18,
+    maxWidth: 18,
+    width: 18
+  },
   closeStroke: {
     backgroundColor: "rgba(29, 46, 68, 0.56)",
     height: 1,
@@ -2072,6 +2180,13 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
     transform: [{ rotate: "45deg" }],
     width: 7
+  },
+  checkIconAsset: {
+    height: 14,
+    marginRight: spacing.xs,
+    maxHeight: 14,
+    maxWidth: 14,
+    width: 14
   },
   postureIcon: {
     height: 17,
@@ -2199,6 +2314,13 @@ const styles = StyleSheet.create({
     position: "relative",
     width: 96
   },
+  gestureAsset: {
+    height: 96,
+    marginTop: 4,
+    maxHeight: 96,
+    maxWidth: 96,
+    width: 96
+  },
   gestureHead: {
     borderColor: attendPalette.mutedGold,
     borderRadius: 999,
@@ -2253,10 +2375,24 @@ const styles = StyleSheet.create({
     opacity: 0.68,
     width: 62
   },
+  smallCrossAsset: {
+    height: 62,
+    maxHeight: 62,
+    maxWidth: 62,
+    opacity: 0.68,
+    width: 62
+  },
   sunburstArt: {
     height: 78,
     marginTop: 4,
     position: "relative",
+    width: 78
+  },
+  ornamentAsset: {
+    height: 78,
+    marginTop: 4,
+    maxHeight: 78,
+    maxWidth: 78,
     width: 78
   },
   sunCircle: {
@@ -2282,6 +2418,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: "relative",
     width: 60
+  },
+  liturgicalAsset: {
+    height: 72,
+    marginTop: 4,
+    maxHeight: 72,
+    maxWidth: 72,
+    width: 72
   },
   chaliceCup: {
     borderBottomColor: attendPalette.mutedGold,

@@ -1,5 +1,5 @@
 import type { MassFlowStep, MassGuidedItem } from "../types";
-import { massFlowBranchGroups, massResponseLanguageOptions } from "./massFlow";
+import { massFlowBranchGroups } from "./massFlow";
 
 export type RuntimeGuidedPage = {
   artItem?: MassGuidedItem;
@@ -23,6 +23,7 @@ export type VariantOption = {
   id: string;
   label: string;
   responseText?: string;
+  secondaryLabel?: string;
 };
 
 export type VariantRule = {
@@ -117,6 +118,10 @@ const requiredAmbientIds = new Set([
 ]);
 
 export function shouldShowFullPrayerAction(step: MassFlowStep, page: RuntimeGuidedPage): boolean {
+  if (step.id === "greeting" && page.items.some((item) => item.id === "greeting-response")) {
+    return true;
+  }
+
   const itemsWithKeys = page.items.filter((item) => Boolean(item.fullPrayerKey));
   if (itemsWithKeys.length === 0) {
     return false;
@@ -141,17 +146,22 @@ export function getVariantRuleForPage(step: MassFlowStep, page: RuntimeGuidedPag
   if (step.id === "greeting" && itemIds.includes("greeting-response")) {
     return {
       groupId: "greeting",
-      title: "Which response are you hearing?",
+      title: "Which greeting are you hearing?",
       options: [
         {
-          id: "greeting-english",
-          label: massResponseLanguageOptions.response_and_with_your_spirit.english,
-          responseText: massResponseLanguageOptions.response_and_with_your_spirit.english
+          id: "greeting-lord",
+          label: "The Lord be with you.",
+          responseText: "The Lord be with you."
         },
         {
-          id: "greeting-latin",
-          label: massResponseLanguageOptions.response_and_with_your_spirit.latin,
-          responseText: massResponseLanguageOptions.response_and_with_your_spirit.latin
+          id: "greeting-grace",
+          label: "The grace of our Lord Jesus Christ...",
+          responseText: "The grace of our Lord Jesus Christ, and the love of God, and the communion of the Holy Spirit be with you all."
+        },
+        {
+          id: "greeting-peace",
+          label: "Grace to you and peace from God our Father...",
+          responseText: "Grace to you and peace from God our Father and the Lord Jesus Christ."
         }
       ]
     };
@@ -172,8 +182,8 @@ export function getVariantRuleForPage(step: MassFlowStep, page: RuntimeGuidedPag
     return branchVariantRule("gospel-acclamation", "Gospel Acclamation form", ["gospel_acclamation"]);
   }
 
-  if (step.id === "profession-of-faith" && itemIds.some((id) => id === "creed-begin" || id.startsWith("branch-nicene-") || id.startsWith("branch-apostles-"))) {
-    return branchVariantRule("creed", "Creed form", ["creed"]);
+  if (step.id === "profession-of-faith" && itemIds.some((id) => id === "creed-opening" || id === "branch-nicene-opening" || id === "branch-apostles-opening")) {
+    return creedVariantRule();
   }
 
   if (step.id === "preface" && itemIds.includes("preface-prayer")) {
@@ -198,35 +208,35 @@ export function getGestureForPage(step: MassFlowStep, page: RuntimeGuidedPage): 
     .toLowerCase();
 
   if (searchable.includes("sign-cross") || searchable.includes("sign of the cross")) {
-    return gesture("sign_of_cross", "gesture.sign_of_cross", "cross", "Sign of the Cross");
+    return gesture("sign_of_cross", "gestures/attend-gesture-sign-cross-default.svg", "cross", "Sign of the Cross");
   }
 
   if (searchable.includes("most grievous fault")) {
-    return gesture("breast_strike", "gesture.breast_strike.small", "hand", "Strike breast");
+    return gesture("breast_strike", "gestures/attend-gesture-strike-breast-default.svg", "hand", "Strike breast");
   }
 
   if (searchable.includes("strike breast") || searchable.includes("fault")) {
-    return gesture("breast_strike", "gesture.breast_strike.large", "hand", "Strike breast");
+    return gesture("breast_strike", "gestures/attend-gesture-strike-breast-default.svg", "hand", "Strike breast");
   }
 
   if (searchable.includes("forehead, lips, heart") || searchable.includes("small cross")) {
-    return gesture("triple_gospel_cross", "gesture.triple_gospel_cross", "cross", "Forehead, lips, heart");
+    return gesture("triple_gospel_cross", "gestures/attend-gesture-sign-cross-default.svg", "cross", "Forehead, lips, heart");
   }
 
   if (searchable.includes("bow")) {
-    return gesture("bow", "gesture.bow", "hand", "Bow");
+    return gesture("bow", "gestures/attend-gesture-bowing-default.svg", "hand", "Bow");
   }
 
   if (searchable.includes("host-elevation") || searchable.includes("sacred host") || item?.id.includes("host-elevation")) {
-    return gesture("elevation_host", "gesture.elevation_host", "host", "Elevation of the Host");
+    return gesture("elevation_host", "liturgical/attend-liturgical-host-eucharist-default.svg", "host", "Elevation of the Host");
   }
 
   if (searchable.includes("chalice-elevation") || searchable.includes("precious blood") || item?.id.includes("chalice-elevation")) {
-    return gesture("elevation_chalice", "gesture.elevation_chalice", "chalice", "Elevation of the Chalice");
+    return gesture("elevation_chalice", "liturgical/attend-liturgical-chalice-default.svg", "chalice", "Elevation of the Chalice");
   }
 
   if (page.items.some((candidate) => candidate.posture === "process") || searchable.includes("procession") || searchable.includes("process to the altar")) {
-    return gesture("procession", "gesture.procession", "procession", "Procession");
+    return gesture("procession", "gestures/attend-gesture-procession-default.svg", "procession", "Procession");
   }
 
   return undefined;
@@ -309,6 +319,27 @@ function standaloneKyrieVariantRule(): VariantRule {
         branchId: "standalone-kyrie-greek-latin",
         id: "standalone-kyrie-greek-latin",
         label: "Kyrie, eleison."
+      }
+    ]
+  };
+}
+
+function creedVariantRule(): VariantRule {
+  return {
+    groupId: "creed",
+    title: "Which Creed are you hearing?",
+    options: [
+      {
+        branchId: "creed-nicene",
+        id: "creed-nicene",
+        label: "I believe in one God,",
+        secondaryLabel: "Nicene Creed"
+      },
+      {
+        branchId: "creed-apostles",
+        id: "creed-apostles",
+        label: "I believe in God,",
+        secondaryLabel: "Apostles' Creed"
       }
     ]
   };

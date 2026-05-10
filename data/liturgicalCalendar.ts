@@ -1,4 +1,5 @@
 import type { ContentMetadata } from "../types";
+import { REVIEW_MASS_CONTENT } from "./reviewMassContent";
 import type { LiturgicalSeason, MassFlowResolverContext } from "./massFlow";
 
 export type LiturgicalRank = "sunday" | "solemnity" | "feast" | "memorial" | "feria";
@@ -41,7 +42,30 @@ const explicitDays: Record<string, Partial<LiturgicalDay>> = {
     rank: "feria",
     season: "easter"
   },
+  "2026-05-10": {
+    gospelAcclamation: "ordinary",
+    gloriaMandated: true,
+    creedRequired: true,
+    hasSecondReading: true,
+    liturgicalColor: "White",
+    massDayKind: "sunday",
+    massTitle: "Sixth Sunday of Easter",
+    rank: "sunday",
+    season: "easter"
+  },
+  "2026-05-11": {
+    gospelAcclamation: "ordinary",
+    gloriaMandated: false,
+    creedRequired: false,
+    hasSecondReading: false,
+    liturgicalColor: "White",
+    massDayKind: "weekday",
+    massTitle: "Monday of the Sixth Week of Easter",
+    rank: "feria",
+    season: "easter"
+  },
   "2026-11-01": {
+    gospelAcclamation: "ordinary",
     gloriaMandated: true,
     creedRequired: true,
     hasSecondReading: true,
@@ -85,7 +109,6 @@ export function resolveLiturgicalDay(input: Date | string = new Date()): Liturgi
   const date = typeof input === "string" ? input : getLocalDateKey(input);
   const explicit = explicitDays[date] ?? {};
   const fallback = fallbackDayForDate(date);
-
   return {
     ...fallback,
     ...explicit,
@@ -97,6 +120,10 @@ export function resolveLiturgicalDay(input: Date | string = new Date()): Liturgi
       liturgicalDate: date
     }
   };
+}
+
+export function hasReviewMassContentForDate(date: string) {
+  return Boolean(REVIEW_MASS_CONTENT[date]);
 }
 
 export function liturgicalDayToMassFlowContext(day: LiturgicalDay): MassFlowResolverContext {

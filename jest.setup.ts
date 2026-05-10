@@ -64,6 +64,7 @@ jest.mock("react-native-safe-area-context", () => ({
 
 beforeEach(() => {
   mockAsyncStorage.clear();
+  process.env.EXPO_PUBLIC_ATTEND_REVIEW_DATE = "2026-05-09";
   mockRouter.push.mockClear();
   mockRouter.replace.mockClear();
   mockRouter.dismissTo.mockClear();

@@ -1,6 +1,8 @@
 import { liturgicalDayToMassFlowContext, resolveLiturgicalDay } from "../data/liturgicalCalendar";
 import { resolveGloriaStatus, resolveMassFlowConfiguration, resolveSecondReadingPresence } from "../data/massFlow";
-import { reviewMassProperResolver, getProperText, isProperAvailableForRuntime, shouldAllowReviewOnlyMassContent } from "../services/massProperResolver";
+import { getReviewMassContentDates } from "../data/reviewMassContent";
+import { isValidReviewDateOverride, resolveAttendDateKey } from "../hooks/useLiturgicalDay";
+import { reviewMassProperResolver, getProperText, isProperAvailableForRuntime, properKeys, shouldAllowReviewOnlyMassContent } from "../services/massProperResolver";
 
 describe("dynamic Mass content resolver", () => {
   it("resolves the review liturgical day context for May 9, 2026", () => {
@@ -18,8 +20,12 @@ describe("dynamic Mass content resolver", () => {
 
   it("keeps solemnity and Lenten resolver scaffolding available", () => {
     const allSaints = liturgicalDayToMassFlowContext(resolveLiturgicalDay("2026-11-01"));
+    const easterSunday = liturgicalDayToMassFlowContext(resolveLiturgicalDay("2026-05-10"));
     const lentenWeekday = liturgicalDayToMassFlowContext(resolveLiturgicalDay("2027-03-14"));
 
+    expect(easterSunday.includeGloria).toBe(true);
+    expect(easterSunday.includeCreed).toBe(true);
+    expect(easterSunday.hasSecondReading).toBe(true);
     expect(allSaints.includeGloria).toBe(true);
     expect(allSaints.includeCreed).toBe(true);
     expect(allSaints.hasSecondReading).toBe(true);
@@ -37,6 +43,43 @@ describe("dynamic Mass content resolver", () => {
     expect(solemnityConfig.branchIds).toContain("gloria-prescribed");
     expect(solemnityConfig.branchIds).toContain("creed-nicene");
     expect(solemnityConfig.hasSecondReading).toBe(true);
+  });
+
+  it("lists usable review content dates across Sunday, weekday, and solemnity contexts", () => {
+    expect(getReviewMassContentDates()).toEqual(["2026-05-09", "2026-05-10", "2026-05-11", "2026-11-01"]);
+    expect(resolveLiturgicalDay("2026-05-10").massTitle).toBe("Sixth Sunday of Easter");
+    expect(resolveLiturgicalDay("2026-05-11").massTitle).toBe("Monday of the Sixth Week of Easter");
+    expect(resolveLiturgicalDay("2026-11-01").massTitle).toBe("All Saints");
+  });
+
+  it("provides all required dynamic content fields for review days", () => {
+    for (const date of getReviewMassContentDates()) {
+      const propers = reviewMassProperResolver.resolve(resolveLiturgicalDay(date));
+
+      for (const key of properKeys) {
+        const proper = getProperText(propers, key);
+        const secondReadingIsOmitted = key === "secondReading" && !liturgicalDayToMassFlowContext(resolveLiturgicalDay(date)).hasSecondReading;
+
+        if (secondReadingIsOmitted) {
+          expect(isProperAvailableForRuntime(proper, true)).toBe(false);
+        } else {
+          expect(isProperAvailableForRuntime(proper, true)).toBe(true);
+          expect(proper?.metadata.liturgicalDate).toBe(date);
+          expect(proper?.metadata.reviewOnly).toBe(true);
+          expect(proper?.metadata.approvalStatus).toBe("pending_review");
+        }
+      }
+    }
+  });
+
+  it("preserves fallback behavior for dates without review content", () => {
+    const missingDay = resolveLiturgicalDay("2026-06-17");
+    const missingPropers = reviewMassProperResolver.resolve(missingDay);
+
+    expect(missingDay.massTitle).toBe("Weekday Mass");
+    expect(resolveGloriaStatus(liturgicalDayToMassFlowContext(missingDay))).toBe("omitted");
+    expect(isProperAvailableForRuntime(getProperText(missingPropers, "firstReading"), true)).toBe(false);
+    expect(isProperAvailableForRuntime(getProperText(missingPropers, "collect"), true)).toBe(false);
   });
 
   it("returns real review-only propers with approval metadata", () => {
@@ -57,6 +100,18 @@ describe("dynamic Mass content resolver", () => {
     }
   });
 
+  it("resolves Sunday and solemnity propers including second readings", () => {
+    const sundayPropers = reviewMassProperResolver.resolve(resolveLiturgicalDay("2026-05-10"));
+    const solemnityPropers = reviewMassProperResolver.resolve(resolveLiturgicalDay("2026-11-01"));
+
+    expect(getProperText(sundayPropers, "firstReading")?.text).toContain("Philip went down to the city of Samaria");
+    expect(getProperText(sundayPropers, "secondReading")?.text).toContain("Sanctify Christ as Lord in your hearts");
+    expect(getProperText(sundayPropers, "gospel")?.text).toContain("If you love me, you will keep my commandments");
+    expect(getProperText(solemnityPropers, "firstReading")?.text).toContain("a great multitude");
+    expect(getProperText(solemnityPropers, "secondReading")?.text).toContain("See what love the Father has bestowed on us");
+    expect(getProperText(solemnityPropers, "gospel")?.text).toContain("Blessed are the poor in spirit");
+  });
+
   it("blocks review-only content from public runtime availability", () => {
     const day = resolveLiturgicalDay("2026-05-09");
     const propers = reviewMassProperResolver.resolve(day);
@@ -72,5 +127,22 @@ describe("dynamic Mass content resolver", () => {
     expect(shouldAllowReviewOnlyMassContent(undefined, false)).toBe(false);
     expect(shouldAllowReviewOnlyMassContent("enabled", false)).toBe(true);
     expect(shouldAllowReviewOnlyMassContent(undefined, true)).toBe(true);
+  });
+
+  it("supports an internal review date override without changing the device date", () => {
+    const actualDate = new Date("2026-05-09T12:00:00");
+
+    expect(resolveAttendDateKey(actualDate)).toBe("2026-05-09");
+    expect(resolveAttendDateKey(actualDate, "2026-05-10")).toBe("2026-05-10");
+    expect(resolveAttendDateKey(actualDate, "2026-05-11")).toBe("2026-05-11");
+    expect(resolveAttendDateKey(actualDate, "2026-11-01")).toBe("2026-11-01");
+    expect(resolveAttendDateKey(actualDate, "not-a-date")).toBe("2026-05-09");
+  });
+
+  it("accepts only yyyy-mm-dd review date overrides", () => {
+    expect(isValidReviewDateOverride("2026-05-10")).toBe(true);
+    expect(isValidReviewDateOverride("2026-5-10")).toBe(false);
+    expect(isValidReviewDateOverride("")).toBe(false);
+    expect(isValidReviewDateOverride(undefined)).toBe(false);
   });
 });

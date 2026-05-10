@@ -6,3 +6,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .DS_Store
+.claude/
+dist-audit/
+dist-native-audit/
+docs/runtime-audit/
+docs/mockups/**/current.png
+assets/**/preview.html
+assets/attend/attend_asset_manifest.csv
+assets/attend/manifest.json

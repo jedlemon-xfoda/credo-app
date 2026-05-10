@@ -70,10 +70,10 @@ describe("review content provider", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByTestId("attend-live-action")).toBeTruthy();
+      expect(screen.getByTestId("attend-guided-moment")).toBeTruthy();
     });
-    expect(screen.getByText(firstSentenceForTest(massFlowSteps[0].guidance ?? ""))).toBeTruthy();
-    expect(screen.getByText("Review copy")).toBeTruthy();
+    expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
+    expect(screen.getByText("LISTEN")).toBeTruthy();
   });
 
   it("Attend steps come from MassFlow", async () => {
@@ -109,26 +109,36 @@ describe("review content provider", () => {
   });
 
   it("Attend Learn more expands and collapses the third layer", async () => {
+    await AsyncStorage.setItem(
+      storageKeys.dailyJourneyState,
+      JSON.stringify({
+        ...createDefaultJourneyState(getLocalDateKey()),
+        steps: { prepare: "complete", attend: "in_progress", reflect: "not_started" },
+        currentStep: "attend",
+        attendPosition: "gospel"
+      })
+    );
+
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("▼ Learn more")).toBeTruthy();
+      expect(screen.getByLabelText("Expand learn more")).toBeTruthy();
     });
 
-    fireEvent.press(screen.getByText("▼ Learn more"));
+    fireEvent.press(screen.getByLabelText("Expand learn more"));
 
-    expect(screen.getByText("▲ Learn more")).toBeTruthy();
+    expect(screen.getByLabelText("Collapse learn more")).toBeTruthy();
     expect(screen.getByTestId("attend-learn-scroll")).toBeTruthy();
     expect(screen.getByText("What is happening")).toBeTruthy();
     expect(screen.getByText("What to do")).toBeTruthy();
     expect(screen.getByText("Why it matters")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("▲ Learn more"));
+    fireEvent.press(screen.getByLabelText("Collapse learn more"));
 
     expect(screen.queryByText("What is happening")).toBeNull();
   });
 
-  it("Attend renders role-based celebrant and you text distinctly", async () => {
+  it("Attend renders guided greeting as phrase-based content", async () => {
     await AsyncStorage.setItem(
       storageKeys.dailyJourneyState,
       JSON.stringify({
@@ -142,9 +152,9 @@ describe("review content provider", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getByText("CELEBRANT")).toBeTruthy();
+      expect(screen.getByText("Make the Sign of the Cross")).toBeTruthy();
     });
-    expect(screen.getByText("The celebrant greets the assembly.")).toBeTruthy();
+    expect(screen.getByText("YOU DO")).toBeTruthy();
   });
 
   it("Attend highlights you responses from MassFlow", async () => {
@@ -243,13 +253,14 @@ describe("review content provider", () => {
     await waitFor(() => {
       expect(screen.getByText(/Our Father, who art in heaven/)).toBeTruthy();
     });
-    expect(screen.getByText("Prev")).toBeTruthy();
-    expect(screen.getByText("Next")).toBeTruthy();
+    expect(screen.getByLabelText("Return Home")).toBeTruthy();
+    expect(screen.getByLabelText("Advance Attend moment")).toBeTruthy();
+    expect(screen.getByLabelText("Open Attend guide")).toBeTruthy();
   });
 
   it.each([
     ["gospel", "DEACON", /The deacon proclaims the Gospel/],
-    ["penitential-act", "YOU (SAY NOW)", /Lord, have mercy/],
+    ["penitential-act", "AMBIENT", "Penitential Act"],
     ["holy", "ALL", /Holy, Holy, Holy Lord God of hosts/],
     ["communion", "YOU (SAY NOW)", "Amen."]
   ])("Attend three-layer UI works for %s", async (attendPosition, roleLabel, expectedText) => {
@@ -270,7 +281,6 @@ describe("review content provider", () => {
     });
     expect(screen.getByText(roleLabel)).toBeTruthy();
     expect(screen.getAllByText(expectedText).length).toBeGreaterThan(0);
-    expect(screen.getByText("▼ Learn more")).toBeTruthy();
   });
 
   it("Learn detail renders provider-backed What Why How and references", async () => {
@@ -298,9 +308,9 @@ describe("review content provider", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Entrance").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Entrance Chant").length).toBeGreaterThan(0);
     });
-    expect(screen.getByText("Entrance chant or antiphon begins the Mass.")).toBeTruthy();
+    expect(screen.getByText("Entrance hymn begins")).toBeTruthy();
     spy.mockRestore();
   });
 
@@ -361,7 +371,7 @@ describe("review content provider", () => {
     render(<AttendScreen />);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Entrance").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("Entrance Chant").length).toBeGreaterThan(0);
     });
     expect(screen.queryByTestId("attend-prayer-card")).toBeNull();
   });

@@ -44,7 +44,7 @@ describe("Journal, Learn, and Reflect QA fixes", () => {
     expect(screen.getByText("Subsections")).toBeTruthy();
     expect(screen.getByText("Dive Deeper")).toBeTruthy();
     expect(screen.getByText("Parts")).toBeTruthy();
-    expect(screen.getAllByText("Entrance").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Entrance Chant").length).toBeGreaterThan(0);
     expect(screen.getByText("What")).toBeTruthy();
     expect(screen.getByText("Why")).toBeTruthy();
     expect(screen.getByText("How")).toBeTruthy();

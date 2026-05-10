@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    SPEAKER / LISTEN — audio indicator for variant overlay.
+    Minimal: slender cone body + one close wave + one distant (faint).
+    Quieter than a generic UI speaker. Restraint over completeness.
+  -->
+  <!-- Cone body: slimmer trapezoid -->
+  <path d="M6.5 10h2.6l3.9-3.4v10.8l-3.9-3.4H6.5z" stroke="currentColor" stroke-width="1.08" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Near wave -->
+  <path d="M14.6 10.4a2.8 2.8 0 0 1 0 3.2" stroke="currentColor" stroke-width="1.08" stroke-linecap="round"/>
+  <!-- Far wave (very quiet — presence without insistence) -->
+  <path d="M16.4 8.6a5.4 5.4 0 0 1 0 6.8" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".4"/>
+</svg>

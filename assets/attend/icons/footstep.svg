@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Footstep / walking icon — One step at a time principle -->
+  <!-- Right footprint (upper right) -->
+  <path d="M14.5 4.5 C14 3 16 2.5 16.5 4 L17.5 7.5 C18 9 17 10 15.5 9.8 L14 9.8 C12.5 9.8 11.8 8.8 12.2 7.2 Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Toe lines on right foot -->
+  <path d="M13.5 9.5c.5.5 1 .7 1.5.5" stroke="currentColor" stroke-width=".72" stroke-linecap="round" opacity=".5"/>
+  <!-- Left footprint (lower left, offset) -->
+  <path d="M8.5 14.5 C8 13 6 13.5 5.5 15 L4.5 18.5 C4 20 5 21 6.5 20.8 L8 20.8 C9.5 20.8 10.2 19.8 9.8 18.2 Z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Toe lines on left foot -->
+  <path d="M8.5 20.5c-.5.5-1 .7-1.5.5" stroke="currentColor" stroke-width=".72" stroke-linecap="round" opacity=".5"/>
+  <!-- Subtle movement arc between feet -->
+  <path d="M10 10.5 Q11 13 9.5 14" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".32" stroke-dasharray="1.2 1.5"/>
+</svg>

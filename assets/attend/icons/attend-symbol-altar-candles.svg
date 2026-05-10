@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Left candle -->
+  <!-- Flame: teardrop arc — pointed at top, rounded base -->
+  <path d="M8 4 Q6.6 5.8 8 7.8 Q9.4 5.8 8 4Z" stroke="currentColor" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+  <!-- Wick -->
+  <path d="M8 7.8v1" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".55"/>
+  <!-- Candle body -->
+  <path d="M6.8 8.8h2.4v11h-2.4z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Base: slightly wider -->
+  <path d="M5.6 20.8h5.2" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+
+  <!-- Right candle (mirror) -->
+  <path d="M16 4 Q14.6 5.8 16 7.8 Q17.4 5.8 16 4Z" stroke="currentColor" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round" opacity=".88"/>
+  <path d="M16 7.8v1" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".55"/>
+  <path d="M14.8 8.8h2.4v11h-2.4z" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13.2 20.8h5.2" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+</svg>

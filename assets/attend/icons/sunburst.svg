@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    SUNBURST / GLORIA — 8-point radiant ornament.
+    Less mechanical than a pure compass rose: cardinal rays slightly longer,
+    diagonal rays slightly shorter, and two tiers of fine intermediate rays
+    add warmth and depth. Still ordered — divine glory is ordered.
+  -->
+
+  <!-- Center circle -->
+  <circle cx="12" cy="12" r="3.15" stroke="currentColor" stroke-width="1.1"/>
+
+  <!-- Cardinal rays — slightly longer -->
+  <path d="M12 3v3.6" stroke="currentColor" stroke-width="1.04" stroke-linecap="round"/>
+  <path d="M12 17.4v3.6" stroke="currentColor" stroke-width="1.04" stroke-linecap="round"/>
+  <path d="M3 12h3.6" stroke="currentColor" stroke-width="1.04" stroke-linecap="round"/>
+  <path d="M17.4 12H21" stroke="currentColor" stroke-width="1.04" stroke-linecap="round"/>
+
+  <!-- Diagonal rays — slightly shorter than cardinal -->
+  <path d="M6.9 6.9l2.15 2.15" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+  <path d="M14.95 14.95l2.15 2.15" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+  <path d="M17.1 6.9l-2.15 2.15" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+  <path d="M9.05 14.95l-2.15 2.15" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+
+  <!-- Intermediate rays (between cardinal/diagonal) — fine, warm -->
+  <path d="M12 4.5v1.4" stroke="currentColor" stroke-width=".76" stroke-linecap="round" opacity=".48"/>
+  <path d="M12 18.1v1.4" stroke="currentColor" stroke-width=".76" stroke-linecap="round" opacity=".48"/>
+  <path d="M4.5 12h1.4" stroke="currentColor" stroke-width=".76" stroke-linecap="round" opacity=".48"/>
+  <path d="M18.1 12h1.4" stroke="currentColor" stroke-width=".76" stroke-linecap="round" opacity=".48"/>
+
+  <!-- Ground arc — suggestion of earth below the glory -->
+  <path d="M8.4 21.2a10.5 10.5 0 0 0 7.2 0" stroke="currentColor" stroke-width=".86" stroke-linecap="round" opacity=".4"/>
+</svg>

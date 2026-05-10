@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Clasped hands: two hands reaching toward each other, overlapping at center -->
+  <!-- Left hand reaching right -->
+  <path d="M4 14 Q4 9 8 8 Q12 7.5 13 11 Q13 15 9 17 Q5 17 4 14Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Right hand reaching left -->
+  <path d="M20 14 Q20 9 16 8 Q12 7.5 11 11 Q11 15 15 17 Q19 17 20 14Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Interlaced fingers at top: two small arcs at the overlap zone -->
+  <path d="M8 8 Q9 6 10 8" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".68"/>
+  <path d="M12 7.5 Q13 5.5 14 7.5" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".68"/>
+  <!-- Wrist/palm connection at base -->
+  <path d="M9 16 Q12 18 15 16" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".52"/>
+</svg>

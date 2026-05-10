@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 60" fill="none">
+  <!--
+    PENITENTIAL CROSS — large display cross for the Penitential Act card.
+    Same sacred geometry as cross-latin, scaled for dramatic display.
+    Heavier stroke weight reads bold at full card size.
+
+    Vertical:   y=3  → y=57   = 54 units
+    Horizontal: x=5  → x=35   = 30 units  (30/54 = 0.56)
+    Crossbar:   y=18: 15 above / 39 below = 1 : 2.6  ✓
+  -->
+  <path d="M20 3v54" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+  <path d="M5 18h30" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+</svg>

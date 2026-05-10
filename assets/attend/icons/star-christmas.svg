@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    CHRISTMAS STAR — Bethlehem starburst. Not a perfect compass rose.
+    Rays at varied lengths: long vertical (the guide star shines downward),
+    slightly shorter horizontal, shorter diagonals.
+    Natural variation gives warmth. Center circle anchors it.
+  -->
+
+  <!-- Top ray — longest (star rises, guides) -->
+  <path d="M12 2v4.2" stroke="currentColor" stroke-width="1.18" stroke-linecap="round"/>
+  <!-- Bottom ray — long -->
+  <path d="M12 17.8V22" stroke="currentColor" stroke-width="1.18" stroke-linecap="round"/>
+  <!-- Horizontal rays — slightly shorter -->
+  <path d="M2.2 12h4" stroke="currentColor" stroke-width="1.12" stroke-linecap="round"/>
+  <path d="M17.8 12H21.8" stroke="currentColor" stroke-width="1.12" stroke-linecap="round"/>
+
+  <!-- Diagonal rays — slightly shorter still -->
+  <path d="M5.6 5.6l2.7 2.7" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <path d="M15.7 15.7l2.7 2.7" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <path d="M18.4 5.6l-2.7 2.7" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <path d="M8.3 15.7l-2.7 2.7" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+
+  <!-- Center: small circle — the star itself -->
+  <circle cx="12" cy="12" r="2.6" stroke="currentColor" stroke-width="1.1"/>
+
+  <!-- Inner glow dot -->
+  <circle cx="12" cy="12" r=".9" fill="currentColor" opacity=".45"/>
+</svg>

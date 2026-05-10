@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Lyre: used for Entrance Chant ornament -->
+  <!-- Outer U-frame — curved arms rising from base crossbar -->
+  <path d="M7.35 5.9c.12 5.65 1.55 9.75 4.65 9.75s4.53-4.1 4.65-9.75" stroke="currentColor" stroke-width="1.22" stroke-linecap="round"/>
+  <!-- Top crossbar (yoke across the two arms) -->
+  <path d="M8.65 5.85h6.7" stroke="currentColor" stroke-width="1.16" stroke-linecap="round"/>
+  <!-- Strings (3 vertical lines within the frame) -->
+  <path d="M9.7 8.3v6.5" stroke="currentColor" stroke-width=".96" stroke-linecap="round" opacity=".78"/>
+  <path d="M12 7.95v7.05" stroke="currentColor" stroke-width=".96" stroke-linecap="round" opacity=".78"/>
+  <path d="M14.3 8.3v6.5" stroke="currentColor" stroke-width=".96" stroke-linecap="round" opacity=".78"/>
+  <!-- Base crossbar (bottom yoke) -->
+  <path d="M8.5 18.1h7" stroke="currentColor" stroke-width="1.14" stroke-linecap="round"/>
+  <!-- Resonator foot -->
+  <path d="M7.7 19.65h8.6" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".48"/>
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    KNEEL — torso upright, knees on kneeler.
+    Same side-profile reading as sit, but with clear ground-level
+    surface and kneeler platform. Reverent, upright posture.
+  -->
+
+  <!-- Head -->
+  <circle cx="9.8" cy="4.2" r="1.35" stroke="currentColor" stroke-width="1.05"/>
+
+  <!-- Torso → thighs (L-shape, same language as sit) -->
+  <path d="M9.8 7.6v5.2h5.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Shin: short — figure is on kneeler, not chair height -->
+  <path d="M14.9 12.8v3.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!-- Pew rail at thigh level (where hands might rest, implied pew structure) -->
+  <path d="M6.8 12.8h8.1" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".42"/>
+
+  <!-- Kneeler surface (foreground, where knees rest) -->
+  <path d="M6.2 18h12" stroke="currentColor" stroke-width="1.08" stroke-linecap="round"/>
+
+  <!-- Kneeler pad underline (very faint second rail) -->
+  <path d="M6.2 20.2h12" stroke="currentColor" stroke-width=".88" stroke-linecap="round" opacity=".38"/>
+</svg>

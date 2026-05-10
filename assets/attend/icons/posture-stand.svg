@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    STAND — reverently upright.
+    Liturgical pictogram quality: small head, elongated body,
+    arm presence without literal stick-arms, quiet grounding.
+    Thinner strokes, slight organic curve in torso.
+  -->
+
+  <!-- Head: proportionally small, serene circle -->
+  <circle cx="12" cy="4.2" r="1.35" stroke="currentColor" stroke-width="1.05"/>
+
+  <!-- Torso: single graceful stroke with just enough Q-curve to feel drawn, not constructed -->
+  <path d="M12 7.4 Q11.88 13.5 12 20.4" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+
+  <!-- Arms: a quiet draping arc at the shoulder — presence, not anatomy -->
+  <path d="M9.6 10 Q12 10.9 14.4 10" stroke="currentColor" stroke-width="1.02" stroke-linecap="round"/>
+
+  <!-- Ground: very faint horizontal — suggests standing surface, not literal feet -->
+  <path d="M10.6 21.4h2.8" stroke="currentColor" stroke-width=".96" stroke-linecap="round" opacity=".6"/>
+</svg>

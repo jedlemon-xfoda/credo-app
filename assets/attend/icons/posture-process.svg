@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    PROCESS — two figures in ordered liturgical procession.
+    Both upright and dignified. Measured gait, not casual walking.
+    Slight scale difference (first figure slightly taller) suggests
+    processional ordering. The mid-line between them is removed.
+  -->
+
+  <!-- Figure 1 (left, leading) -->
+  <circle cx="8" cy="3.8" r="1.28" stroke="currentColor" stroke-width="1.05"/>
+  <path d="M8 7.8v8.5" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+  <!-- Arms: horizontal stroke (simple shoulder width, not jointed) -->
+  <path d="M6.3 9.8h3.4" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+  <!-- Walking legs: stride open, measured -->
+  <path d="M6.8 20.5 8 16.3 9.2 20.5" stroke="currentColor" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Figure 2 (right, following — same height, opposite stride phase) -->
+  <circle cx="16" cy="3.8" r="1.28" stroke="currentColor" stroke-width="1.05"/>
+  <path d="M16 7.8v8.5" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+  <!-- Arms (slightly different level — subtle differentiation) -->
+  <path d="M14.3 10.2h3.4" stroke="currentColor" stroke-width=".98" stroke-linecap="round"/>
+  <!-- Walking legs: opposite phase to figure 1 -->
+  <path d="M14.8 20.5 16 16.3 17.2 20.5" stroke="currentColor" stroke-width="1.02" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

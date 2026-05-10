@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    SIT — side-profile, seated in pew.
+    Head and torso upright. L-shape: torso → thighs → lower leg hangs.
+    Chair back extremely subtle — presence without literalness.
+  -->
+
+  <!-- Head -->
+  <circle cx="10.2" cy="4.2" r="1.35" stroke="currentColor" stroke-width="1.05"/>
+
+  <!-- Torso (down) then thighs (right), L-shape -->
+  <path d="M10.2 7.6v5.2h5.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Lower leg (hangs from knee) -->
+  <path d="M15.7 12.8v5.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!-- Chair back: almost invisible — spiritual suggestion of structure -->
+  <path d="M7.8 9v5" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".34"/>
+
+  <!-- Pew seat rail (very subtle) -->
+  <path d="M7.8 14h2.4" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".28"/>
+
+  <!-- Floor suggestion -->
+  <path d="M8.4 21h9.6" stroke="currentColor" stroke-width="1.02" stroke-linecap="round"/>
+</svg>

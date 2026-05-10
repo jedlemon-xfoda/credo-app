@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" fill="none">
+  <!-- Three sinuous smoke columns, diverging as they rise, fading toward top -->
+  <!-- Left smoke -->
+  <path d="M10 24 Q8 20 10 15 Q12 10 10 4" stroke="currentColor" stroke-width="1.06" stroke-linecap="round" opacity=".8"/>
+  <!-- Center smoke: slightly bolder — the primary column -->
+  <path d="M12 25 Q14 20 12 15 Q10 10 12 3" stroke="currentColor" stroke-width="1.14" stroke-linecap="round" opacity=".9"/>
+  <!-- Right smoke: fades faster -->
+  <path d="M14 24 Q16 20 14 16 Q12 11 14 6" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".55"/>
+  <!-- Thurible body: rounded vessel at base -->
+  <path d="M8.5 24.5 Q12 23.5 15.5 24.5 Q17 27 15.5 29.5 Q12 31 8.5 29.5 Q7 27 8.5 24.5Z" stroke="currentColor" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Thurible lid -->
+  <path d="M7.5 25h9" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".65"/>
+  <!-- Ring at top of thurible -->
+  <path d="M10.5 24 Q12 23.2 13.5 24" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".55"/>
+</svg>

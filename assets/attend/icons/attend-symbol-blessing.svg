@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" fill="none">
+  <!-- Schematic priestly figure: right hand raised in benediction. -->
+  <!-- Head -->
+  <circle cx="12" cy="4.5" r="2.8" stroke="currentColor" stroke-width="1.18"/>
+  <!-- Torso -->
+  <path d="M12 7.8v12" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Right arm: raised in blessing -->
+  <path d="M12 11 Q16 9 18 6" stroke="currentColor" stroke-width="1.16" stroke-linecap="round"/>
+  <!-- Three-finger blessing hand: three short diverging strokes -->
+  <path d="M18 6 Q18 4 19 4.5" stroke="currentColor" stroke-width="1.02" stroke-linecap="round" opacity=".78"/>
+  <path d="M18 6 Q19 4.2 20 5" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".62"/>
+  <path d="M18 6 Q20 5 20.5 6" stroke="currentColor" stroke-width=".82" stroke-linecap="round" opacity=".46"/>
+  <!-- Left arm: at side -->
+  <path d="M12 11 Q9 13 8 18" stroke="currentColor" stroke-width="1.06" stroke-linecap="round" opacity=".78"/>
+  <!-- Ground suggestion -->
+  <path d="M8 28 h8" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".28"/>
+</svg>

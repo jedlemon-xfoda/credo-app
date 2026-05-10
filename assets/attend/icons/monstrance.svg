@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" fill="none">
+  <!--
+    MONSTRANCE — Eucharistic sacred vessel. Gold on navy in the board.
+    More rays than the first pass. Natural variation in ray length
+    (long cardinal, medium diagonal, short off-axis) avoids the
+    mechanical compass-rose quality. Rays painted first; circles on top.
+
+    Center: (12, 9). Host circle r=3.5.
+    Stem from circle bottom (y=12.5) to base (y=23).
+  -->
+
+  <!-- ── Long cardinal rays ── -->
+  <path d="M12 2v3" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <path d="M22 9h-2.8" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <path d="M2 9h2.8" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+
+  <!-- ── Medium diagonal rays (45°) ── -->
+  <path d="M17.4 3.6 15.8 5.2" stroke="currentColor" stroke-width=".96" stroke-linecap="round"/>
+  <path d="M6.6 3.6 8.2 5.2" stroke="currentColor" stroke-width=".96" stroke-linecap="round"/>
+  <path d="M17.4 14.4 15.8 12.8" stroke="currentColor" stroke-width=".96" stroke-linecap="round"/>
+  <path d="M6.6 14.4 8.2 12.8" stroke="currentColor" stroke-width=".96" stroke-linecap="round"/>
+
+  <!-- ── Short off-axis rays at ~22° ── -->
+  <path d="M15.1 2.4 14.3 4.2" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+  <path d="M8.9 2.4 9.7 4.2" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+  <path d="M19.8 5.8 18.2 7" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+  <path d="M4.2 5.8 5.8 7" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+  <path d="M19.8 12.2 18.2 11" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+  <path d="M4.2 12.2 5.8 11" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".68"/>
+
+  <!-- ── Finest tertiary rays at ~11° ── -->
+  <path d="M13 2.2 12.6 3.8" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+  <path d="M11 2.2 11.4 3.8" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+  <path d="M21 7.4 19.6 8.2" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+  <path d="M3 7.4 4.4 8.2" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+  <path d="M21 10.6 19.6 9.8" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+  <path d="M3 10.6 4.4 9.8" stroke="currentColor" stroke-width=".68" stroke-linecap="round" opacity=".46"/>
+
+  <!-- ── Outer halo (lunette rim) ── -->
+  <circle cx="12" cy="9" r="5.2" stroke="currentColor" stroke-width=".62" opacity=".32"/>
+
+  <!-- ── Inner host circle — painted over rays ── -->
+  <circle cx="12" cy="9" r="3.5" stroke="currentColor" stroke-width="1.16"/>
+
+  <!-- Cross in host (IHS / consecration) — very subtle -->
+  <path d="M12 6.8v4.4" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".3"/>
+  <path d="M9.8 9h4.4" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".3"/>
+
+  <!-- ── Stem ── -->
+  <path d="M12 12.5v4.6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!-- Node -->
+  <path d="M10.2 17.1 Q12 16 13.8 17.1 Q12 18.2 10.2 17.1Z" stroke="currentColor" stroke-width=".96" stroke-linejoin="round"/>
+
+  <!-- Lower stem -->
+  <path d="M12 18.2v2.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+
+  <!-- ── Base ── -->
+  <path d="M8.6 21.5 Q12 20.4 15.4 21.5" stroke="currentColor" stroke-width="1.12" stroke-linecap="round"/>
+  <path d="M7 23h10" stroke="currentColor" stroke-width="1.24" stroke-linecap="round"/>
+</svg>

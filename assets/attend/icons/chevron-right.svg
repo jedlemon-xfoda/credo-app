@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    CHEVRON RIGHT — forward navigation.
+    Mirror of chevron-left. Same editorial quality.
+  -->
+  <path d="M9 6l5.8 6L9 18" stroke="currentColor" stroke-width="1.28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    LATIN CROSS — canonical Roman Catholic proportions.
+    Sacred geometry: crossbar at ~28% from top of vertical arm.
+    Horizontal arm 70% of total vertical length (welcoming spread).
+    No foot, no decoration — pure form.
+
+    Vertical:   y=2  → y=22   = 20 units
+    Horizontal: x=5  → x=19   = 14 units  (14/20 = 0.70)
+    Crossbar:   y=7.5: 5.5 above / 14.5 below = 1 : 2.64  ✓ Catholic
+  -->
+  <path d="M12 2v20" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+  <path d="M5 7.5h14" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/>
+</svg>

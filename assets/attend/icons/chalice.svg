@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Chalice: used for Opening Prayer / collect ornament -->
+  <!-- Cup body -->
+  <path d="M7.7 4.8h8.6v2.7c0 2.9-1.8 5.05-4.3 5.05S7.7 10.4 7.7 7.5V4.8Z" stroke="currentColor" stroke-width="1.24" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Paten line (top rim decoration) -->
+  <path d="M8.9 6.35h6.2" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".45"/>
+  <!-- Stem -->
+  <path d="M12 12.55v5.55" stroke="currentColor" stroke-width="1.24" stroke-linecap="round"/>
+  <!-- Node on stem -->
+  <path d="M10.2 16.4 Q12 15.4 13.8 16.4 Q12 17.4 10.2 16.4Z" stroke="currentColor" stroke-width="1" stroke-linejoin="round" opacity=".7"/>
+  <!-- Base -->
+  <path d="M8.6 20.2h6.8" stroke="currentColor" stroke-width="1.18" stroke-linecap="round"/>
+</svg>

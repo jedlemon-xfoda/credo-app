@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" fill="none">
+  <!-- Chain from ceiling: two links with cross-bars -->
+  <path d="M12 2v2.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".55"/>
+  <path d="M12 5.5v2.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".42"/>
+  <path d="M11 3h2" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".38"/>
+  <path d="M11 6.5h2" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".28"/>
+  <!-- Lamp hanger ring -->
+  <path d="M10 8.5 Q12 8 14 8.5" stroke="currentColor" stroke-width="1.06" stroke-linecap="round"/>
+  <!-- Lamp body: rounded cup — Real Presence light -->
+  <path d="M8.5 9.5 Q12 9 15.5 9.5v4.5 Q12 16.5 8.5 14Z" stroke="currentColor" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Flame within lamp -->
+  <path d="M12 11 Q11.2 9.8 12 9.5 Q12.8 9.8 12 11Z" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".52"/>
+  <!-- Glow: faint arc at base of lamp -->
+  <path d="M9.5 13.5 Q12 15 14.5 13.5" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".35"/>
+  <!-- Hanging drip point -->
+  <path d="M12 14.5v1.5" stroke="currentColor" stroke-width=".9" stroke-linecap="round" opacity=".45"/>
+</svg>

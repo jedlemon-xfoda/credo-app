@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Flower bloom — Always Optional principle (clarity without pressure) -->
+  <!-- 6 petals drawn as pointed ovals without complex transforms -->
+  <!-- Top petal -->
+  <path d="M12 10.5 Q13.5 7 12 4.5 Q10.5 7 12 10.5Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Bottom petal -->
+  <path d="M12 13.5 Q10.5 17 12 19.5 Q13.5 17 12 13.5Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Upper-right petal -->
+  <path d="M12 11 Q15.5 9.5 17 7 Q13.8 7.5 12 11Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Upper-left petal -->
+  <path d="M12 11 Q8.5 9.5 7 7 Q10.2 7.5 12 11Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Lower-right petal -->
+  <path d="M12 13 Q15.5 14.5 17 17 Q13.8 16.5 12 13Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Lower-left petal -->
+  <path d="M12 13 Q8.5 14.5 7 17 Q10.2 16.5 12 13Z" stroke="currentColor" stroke-width="1.05" stroke-linejoin="round"/>
+  <!-- Center circle -->
+  <circle cx="12" cy="12" r="2" stroke="currentColor" stroke-width="1.1"/>
+</svg>

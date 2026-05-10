@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    CHEVRON LEFT — back navigation.
+    Editorial angle: slightly more acute than 45° for refined feel.
+    Thinner stroke than system default — quiet directional cue.
+  -->
+  <path d="M15 6 9.2 12 15 18" stroke="currentColor" stroke-width="1.28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 24" fill="none">
+  <!-- Advent wreath: 4 candles of varying heights with flames -->
+
+  <!-- Candle 1 -->
+  <rect x="3.5" y="11" width="4" height="9.5" rx=".6" stroke="currentColor" stroke-width="1.1"/>
+  <!-- Flame 1 -->
+  <path d="M5.5 10.8 C5.5 9.5 6.8 8.5 5.5 7 C4.2 8.5 4.2 9.5 5.5 10.8Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"/>
+
+  <!-- Candle 2 (taller) -->
+  <rect x="10.5" y="8" width="4" height="12.5" rx=".6" stroke="currentColor" stroke-width="1.1"/>
+  <!-- Flame 2 -->
+  <path d="M12.5 7.8 C12.5 6.5 13.8 5.5 12.5 4 C11.2 5.5 11.2 6.5 12.5 7.8Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"/>
+
+  <!-- Candle 3 -->
+  <rect x="17.5" y="11" width="4" height="9.5" rx=".6" stroke="currentColor" stroke-width="1.1"/>
+  <!-- Flame 3 -->
+  <path d="M19.5 10.8 C19.5 9.5 20.8 8.5 19.5 7 C18.2 8.5 18.2 9.5 19.5 10.8Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"/>
+
+  <!-- Candle 4 (shortest) -->
+  <rect x="24.5" y="13" width="4" height="7.5" rx=".6" stroke="currentColor" stroke-width="1.1"/>
+  <!-- Flame 4 -->
+  <path d="M26.5 12.8 C26.5 11.5 27.8 10.5 26.5 9 C25.2 10.5 25.2 11.5 26.5 12.8Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round"/>
+
+  <!-- Wreath base arc -->
+  <path d="M2 21.8 Q16 20 30 21.8" stroke="currentColor" stroke-width="1.18" stroke-linecap="round"/>
+  <!-- Wreath foliage hint (dots along arc) -->
+  <path d="M5 21.5 Q8 21 11 21.5 Q14 22 17 21.5 Q20 21 23 21.5 Q26 22 29 21.5" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".45"/>
+</svg>

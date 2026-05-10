@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Sacred cadence — vertical bars like a liturgical rhythm indicator -->
+  <!-- 5 bars, center tallest (bell-curve shape) -->
+  <path d="M4.5 11v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M8 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M11.5 5.5v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M15 8.5v7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M18.5 11v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

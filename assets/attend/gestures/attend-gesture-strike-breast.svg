@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Head: x-offset and torso curve suggest forward bow of contrition -->
+  <circle cx="33" cy="10" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso: slight inward bow -->
+  <path d="M33 16 Q30 34 31 54" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Right arm: tight arc, fist pressing left breast -->
+  <path d="M40 25 Q33 28 26 35" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Left arm: resting secondary -->
+  <path d="M24 25 Q23 37 24 46" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".72"/>
+  <!-- Ground -->
+  <path d="M20 71 h24" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+</svg>

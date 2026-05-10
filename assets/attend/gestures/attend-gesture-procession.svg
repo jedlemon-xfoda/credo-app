@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Head: forward of center — lean signals forward motion -->
+  <circle cx="34" cy="9" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso: slight forward lean (Q-curve biased forward) -->
+  <path d="M34 15 Q33.5 31 35 50" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arms: horizontal stride-swing stroke -->
+  <path d="M20 26 h28" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".82"/>
+  <!-- Legs: wide stride V — measured liturgical gait, not rushing -->
+  <path d="M22 68 L35 50 L48 68" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Ground -->
+  <path d="M14 71 h36" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 16" fill="none">
+  <!-- Simple plus-divider: line — + — line (inline with cards between sections) -->
+  <!-- Left line -->
+  <path d="M2 8h16" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".55"/>
+  <!-- Right line -->
+  <path d="M30 8h16" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".55"/>
+  <!-- Plus sign -->
+  <path d="M24 5v6" stroke="currentColor" stroke-width="1.08" stroke-linecap="round" opacity=".8"/>
+  <path d="M21 8h6" stroke="currentColor" stroke-width="1.08" stroke-linecap="round" opacity=".8"/>
+</svg>

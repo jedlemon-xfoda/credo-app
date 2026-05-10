@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Seated, head upright — attentive posture, not slumped. -->
+  <!-- Head: un-bowed, slightly forward (toward the sound) -->
+  <circle cx="32" cy="9" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso: seated length — shorter than standing -->
+  <path d="M32 15 v26" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Thighs: horizontal to knee (L-shape, same language as kneeling) -->
+  <path d="M32 41 h20" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Shin: hanging from knee -->
+  <path d="M52 41 v22" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- Chair back: ghost — structural presence, not literal furniture -->
+  <path d="M24 16 v26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".28"/>
+  <!-- Pew seat suggestion -->
+  <path d="M24 42 h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".22"/>
+  <!-- Ground -->
+  <path d="M20 65 h36" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".22"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    HOME — bottom nav left.
+    Airy, contemplative proportions. Roof is not too peaked.
+    Walls are slightly wider than deep. Door is simple and centered.
+    Stroke weight matches the rest of the nav family.
+  -->
+  <!-- Roof (gable) — gentle slope, airy angle -->
+  <path d="M4.8 11.6 12 5.4l7.2 6.2" stroke="currentColor" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Walls and floor -->
+  <path d="M7 10.4v8.8h10v-8.8" stroke="currentColor" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Door — proportional, centered -->
+  <path d="M10.2 19.2v-5h3.6v5" stroke="currentColor" stroke-width="1.08" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

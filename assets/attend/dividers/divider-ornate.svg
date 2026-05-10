@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 24" fill="none">
+  <!--
+    ORNATE DIVIDER — line / diamond / cross-arm ornament / line.
+    Micro-cross geometry derived from the same Catholic sacred language:
+    vertical arms slightly longer than horizontal (vertical emphasis).
+
+    Diamond center: rotated square, 7×8.8 (slightly taller than wide).
+    Cross arms beyond diamond: vertical 3.2 units, horizontal 2.4 units.
+    This subtly echoes the 1:2.4 Catholic ratio even at divider scale.
+  -->
+
+  <!-- Left rule -->
+  <path d="M4 12h31.5" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".62"/>
+  <!-- Right rule -->
+  <path d="M60.5 12h31.5" stroke="currentColor" stroke-width=".95" stroke-linecap="round" opacity=".62"/>
+
+  <!-- Diamond — slightly taller than wide (vertical sacred emphasis) -->
+  <path d="M48 7.6 52 12 48 16.4 44 12 48 7.6Z" stroke="currentColor" stroke-width="1.06" stroke-linejoin="round"/>
+
+  <!-- Vertical cross arms (longer — Catholic ratio) -->
+  <path d="M48 4.4v3.2" stroke="currentColor" stroke-width=".94" stroke-linecap="round" opacity=".72"/>
+  <path d="M48 16.4v3.2" stroke="currentColor" stroke-width=".94" stroke-linecap="round" opacity=".72"/>
+  <!-- Horizontal cross arms (shorter — restrained horizontal) -->
+  <path d="M41.6 12H44" stroke="currentColor" stroke-width=".94" stroke-linecap="round" opacity=".72"/>
+  <path d="M52 12h2.4" stroke="currentColor" stroke-width=".94" stroke-linecap="round" opacity=".72"/>
+</svg>

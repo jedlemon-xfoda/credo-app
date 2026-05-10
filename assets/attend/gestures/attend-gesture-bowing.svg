@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Profile view. Legs upright and planted; torso bowed forward ~35°. -->
+  <!-- Legs: upright, grounded -->
+  <path d="M30 68 L30 46" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M36 68 L36 46" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity=".7"/>
+  <!-- Torso: arcs forward from hip to shoulder — the bow is the visual signal -->
+  <path d="M33 46 Q26 36 18 22" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Head: follows bow angle, positioned at shoulder end -->
+  <circle cx="16" cy="18" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Arm: hanging forward from bowed shoulder -->
+  <path d="M18 24 Q16 35 16 47" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+  <!-- Ground -->
+  <path d="M18 71 h28" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+</svg>

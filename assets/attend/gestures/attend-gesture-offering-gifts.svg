@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Profile view, facing right (toward the altar). -->
+  <!-- Head -->
+  <circle cx="36" cy="9" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso: slight forward lean into the offering -->
+  <path d="M36 15 Q35.5 32 38 52" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Forward arm extended, presenting the gift -->
+  <path d="M40 26 Q48 30 54 36" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Gift/paten: lens disc at arm end -->
+  <path d="M52 34 Q58 33 58 37 Q58 41 52 41 Q46 41 46 37 Q46 33 52 34 Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".78"/>
+  <!-- Rear arm: secondary, balancing -->
+  <path d="M40 26 Q32 30 28 40" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+  <!-- Ground -->
+  <path d="M16 72 h36" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+</svg>

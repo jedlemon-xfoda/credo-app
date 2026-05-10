@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Head -->
+  <circle cx="32" cy="8" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso: central upright stroke with gentle organic curve -->
+  <path d="M32 14 Q31.8 30 32 48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arm presence: single horizontal drape at shoulder height -->
+  <path d="M20 24 h24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".82"/>
+  <!-- Legs: narrow V (standing still — feet close together) -->
+  <path d="M28 68 L32 48 L36 68" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Ground -->
+  <path d="M22 71 h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".28"/>
+</svg>

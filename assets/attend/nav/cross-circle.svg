@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!--
+    NAV CROSS — center bottom-navigation button.
+    Same geometry as icons/cross-circle.svg.
+    Circle stroke slightly thinner at nav scale for visual balance.
+
+    Circle: r=10.2, center (12,12).
+    Cross maintains 1:2.56 Catholic crossbar ratio inside the circle.
+  -->
+  <circle cx="12" cy="12" r="10.2" stroke="currentColor" stroke-width="1.18"/>
+  <path d="M12 4v16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M6.5 8.5h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+</svg>

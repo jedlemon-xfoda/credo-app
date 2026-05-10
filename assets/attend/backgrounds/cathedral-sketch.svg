@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" fill="none" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!--
+    Cathedral architectural sketch — used as light background texture.
+    Render at low opacity (0.06–0.12) over parchment/ivory.
+    All paths use currentColor; opacity is baked into each element.
+  -->
+
+  <!-- ═══════════════════════════════
+       CENTRAL TOWER / SPIRE
+       ═══════════════════════════════ -->
+  <!-- Spire needle -->
+  <path d="M200 20 L193 80 L207 80 Z" stroke="currentColor" stroke-width="1" stroke-linejoin="round" opacity=".35"/>
+  <!-- Tower body -->
+  <path d="M185 80h30v100H185Z" stroke="currentColor" stroke-width=".9" stroke-linejoin="round" opacity=".28"/>
+  <!-- Lancet window in tower -->
+  <path d="M193 100 Q193 90 200 88 Q207 90 207 100 L207 118 L193 118 Z" stroke="currentColor" stroke-width=".8" stroke-linejoin="round" opacity=".22"/>
+  <!-- Cross at tower peak -->
+  <path d="M200 22v18M194 30h12" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity=".4"/>
+  <!-- Pinnacles flanking tower -->
+  <path d="M180 85 L176 110 L184 110 Z" stroke="currentColor" stroke-width=".8" stroke-linejoin="round" opacity=".2"/>
+  <path d="M220 85 L216 110 L224 110 Z" stroke="currentColor" stroke-width=".8" stroke-linejoin="round" opacity=".2"/>
+
+  <!-- ═══════════════════════════════
+       LEFT NAVE ARCADE
+       ═══════════════════════════════ -->
+  <!-- Outer wall -->
+  <path d="M40 500V160" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".22"/>
+  <!-- Flying buttress left -->
+  <path d="M40 240 Q80 200 100 180" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".18"/>
+  <path d="M40 320 Q80 275 100 250" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".18"/>
+
+  <!-- Left pointed arch 1 (tall) -->
+  <path d="M60 500V320 Q60 230 100 200 Q140 230 140 320V500" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".24"/>
+  <!-- Left pointed arch 2 (inner) -->
+  <path d="M72 500V340 Q72 268 100 248 Q128 268 128 340V500" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".16"/>
+
+  <!-- Tracery window in left arch -->
+  <!-- Outer lancet -->
+  <path d="M80 320 Q80 275 100 258 Q120 275 120 320" stroke="currentColor" stroke-width=".72" stroke-linecap="round" opacity=".18"/>
+  <!-- Rose oculus -->
+  <circle cx="100" cy="248" r="10" stroke="currentColor" stroke-width=".7" opacity=".16"/>
+  <path d="M100 238v20M90 248h20M93.5 241.5l13 13M106.5 241.5l-13 13" stroke="currentColor" stroke-width=".55" stroke-linecap="round" opacity=".14"/>
+
+  <!-- ═══════════════════════════════
+       RIGHT NAVE ARCADE (mirrored)
+       ═══════════════════════════════ -->
+  <path d="M360 500V160" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".22"/>
+  <path d="M360 240 Q320 200 300 180" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".18"/>
+  <path d="M360 320 Q320 275 300 250" stroke="currentColor" stroke-width=".8" stroke-linecap="round" opacity=".18"/>
+
+  <!-- Right pointed arch 1 -->
+  <path d="M340 500V320 Q340 230 300 200 Q260 230 260 320V500" stroke="currentColor" stroke-width=".85" stroke-linecap="round" opacity=".24"/>
+  <!-- Right pointed arch 2 (inner) -->
+  <path d="M328 500V340 Q328 268 300 248 Q272 268 272 340V500" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".16"/>
+
+  <!-- Tracery window in right arch -->
+  <path d="M280 320 Q280 275 300 258 Q320 275 320 320" stroke="currentColor" stroke-width=".72" stroke-linecap="round" opacity=".18"/>
+  <circle cx="300" cy="248" r="10" stroke="currentColor" stroke-width=".7" opacity=".16"/>
+  <path d="M300 238v20M290 248h20M293.5 241.5l13 13M306.5 241.5l-13 13" stroke="currentColor" stroke-width=".55" stroke-linecap="round" opacity=".14"/>
+
+  <!-- ═══════════════════════════════
+       CENTRAL FACADE / PORTAL
+       ═══════════════════════════════ -->
+  <!-- Main central arch (wider, taller) -->
+  <path d="M140 500V260 Q140 150 200 120 Q260 150 260 260V500" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity=".26"/>
+  <!-- Inner arch moulding -->
+  <path d="M155 500V275 Q155 185 200 160 Q245 185 245 275V500" stroke="currentColor" stroke-width=".75" stroke-linecap="round" opacity=".18"/>
+
+  <!-- Central rose window above portal -->
+  <circle cx="200" cy="155" r="26" stroke="currentColor" stroke-width=".95" opacity=".22"/>
+  <circle cx="200" cy="155" r="18" stroke="currentColor" stroke-width=".72" opacity=".16"/>
+  <!-- Rose spokes -->
+  <path d="M200 129v52M174 155h52M182 137l36 36M218 137l-36 36" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".16"/>
+  <!-- Petal shapes inside rose -->
+  <path d="M200 134 Q207 140 200 147 Q193 140 200 134Z" stroke="currentColor" stroke-width=".55" opacity=".12"/>
+  <path d="M200 163 Q207 170 200 177 Q193 170 200 163Z" stroke="currentColor" stroke-width=".55" opacity=".12" transform="rotate(180 200 155)"/>
+  <path d="M185 155 Q179 148 172 155 Q179 162 185 155Z" stroke="currentColor" stroke-width=".55" opacity=".12" transform="rotate(90 200 155)"/>
+  <path d="M215 155 Q221 148 228 155 Q221 162 215 155Z" stroke="currentColor" stroke-width=".55" opacity=".12" transform="rotate(270 200 155)"/>
+
+  <!-- Portal arch lancet pair within central arch -->
+  <path d="M165 500V340 Q165 295 185 278 Q200 268 200 268 Q200 268 215 278 Q235 295 235 340V500" stroke="currentColor" stroke-width=".72" stroke-linecap="round" opacity=".16"/>
+
+  <!-- ═══════════════════════════════
+       NAVE FLOOR LINES (perspective)
+       ═══════════════════════════════ -->
+  <path d="M40 500 L200 350 L360 500" stroke="currentColor" stroke-width=".7" stroke-linecap="round" opacity=".14"/>
+  <path d="M40 500 L200 380 L360 500" stroke="currentColor" stroke-width=".6" stroke-linecap="round" opacity=".1"/>
+
+  <!-- ═══════════════════════════════
+       HORIZONTAL STRING COURSES
+       ═══════════════════════════════ -->
+  <path d="M40 180h320" stroke="currentColor" stroke-width=".65" stroke-linecap="round" opacity=".14"/>
+  <path d="M60 320h280" stroke="currentColor" stroke-width=".6" stroke-linecap="round" opacity=".12"/>
+</svg>

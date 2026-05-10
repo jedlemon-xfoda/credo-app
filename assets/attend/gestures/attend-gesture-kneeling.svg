@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" fill="none">
+  <!-- Profile view. Figure faces right (toward altar). -->
+  <!-- Head -->
+  <circle cx="26" cy="9" r="5" stroke="currentColor" stroke-width="3"/>
+  <!-- Torso down, thighs right: L-shape (same language as posture-kneel, scaled) -->
+  <path d="M26 15 v16 h14" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Shin: short — on kneeler, not chair height -->
+  <path d="M40 31 v14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Pew rail at thigh level -->
+  <path d="M16 31 h28" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".42"/>
+  <!-- Kneeler surface -->
+  <path d="M12 48 h34" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Kneeler pad underline -->
+  <path d="M12 52 h34" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".38"/>
+</svg>
